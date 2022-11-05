@@ -32,11 +32,11 @@ jobs:
     
     # clone代码，使用checkout这个action，不带@表示使用最新版本，官方建议带。
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
     # 构建代码，相当于使用别人做的mdbook docker
-    - name: Setup mdBook
-      uses: peaceiris/actions-mdbook@v1
+      - name: Build and Deploy
+        uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: 'latest'
     # 构建代码      
@@ -79,7 +79,20 @@ git add *
 git commit -m "first commit"
 git branch -M main
 git remote add origin git@github.com:errorcode7/errorcode7.github.io.git
-
+# push前，保证本地.ssh下的公钥已经添加到github账户Settings的SSH keys
 git push -u origin main
 ```
+提交成功后点击仓库里的Actions，查看流水线构建情况。
+
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="pic/actions.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">流水线</div>
+</center>
+
 >参考：https://github.com/marketplace/actions/mdbook-action

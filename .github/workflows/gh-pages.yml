@@ -15,13 +15,14 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     
-    # clone代码，使用checkout这个action，不带@表示使用最新版本，官方建议带。
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    # clone代码，使用checkout这个action，不带@表示使用最新版本，官方建议带。
+      - name: Checkout
+        uses: actions/checkout@v2
     # 构建代码，相当于使用别人做的mdbook docker
-    - name: Build and Deploy
-      uses: peaceiris/actions-mdbook@v1
+      - name: Build and Deploy
+        uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: 'latest'
     # 构建代码      
