@@ -135,7 +135,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="mdbook命令"><a class="header" href="#mdbook命令">mdbook命令</a></h1>
-<p>mdbook的主要命令就是初始工程和启动服务</p>
+<p>mdbook的主要命令就是初始工程和启动服务。</p>
 <h2 id="init"><a class="header" href="#init">init</a></h2>
 <pre><code class="language-shell">&gt; mdbook init -h
 mdbook.exe-init v0.4.21
@@ -159,7 +159,7 @@ OPTIONS:
   
 </code></pre>
 <h2 id="serve"><a class="header" href="#serve">serve</a></h2>
-<pre><code class="language-shell">mdbook serve -h
+<pre><code class="language-shell">&gt; mdbook serve -h
 mdbook.exe-serve v0.4.21
 Serves a book at http://localhost:3000, and rebuilds it on changes
 
@@ -189,7 +189,7 @@ mdbook init . --title &quot;my book&quot;
 <p>2.启用服务,默认端口是3000，--open会自动打开默认浏览器。</p>
 <pre><code class="language-shell">mdbook serve . --open
 </code></pre>
-<p>3.现在可以通过在编辑src下的SUMMARY.md中新增章节，新增条目后，会自动创建文件同时更新网页目录。</p>
+<p>3.现在可以通过在编辑src下的SUMMARY.md中新增章节，新增条目后，会自动创建文件,同时更新网页目录。</p>
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
@@ -200,7 +200,7 @@ mdbook init . --title &quot;my book&quot;
     color: #999;
     padding: 2px;">文件布局</div>
 </center>
-<p>serve自动将markdown渲染输出到book目录，因此<code>.gitignore</code>文件的的book表示，忽略book目录内的修改触发build。</p>
+<p>serve自动将markdown渲染输出到book目录，因此<code>.gitignore</code>文件的book，表示忽略book目录内的修改，防止触发build。</p>
 <blockquote>
 <p>参考：https://rust-lang.github.io/mdBook/index.html</p>
 </blockquote>

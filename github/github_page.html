@@ -146,7 +146,7 @@ github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点
 <pre><code class="language-shell">mkdir -p .github/workflows 
 vim .github/workflows/gh-pages.yml
 </code></pre>
-<p>我们新建一个<code>gh-pages.yml</code>。</p>
+<p>我们新建的<code>gh-pages.yml</code>内容：</p>
 <pre><code class="language-yml">name: GitHub Pages Site Build and Deploy workflow
 on:
   # 触发流水线的事件，推送或者合并
@@ -194,18 +194,18 @@ git config --global user.email yourname@gmail.com
 
 ssh-keygen -t rsa -b 4096 -C &quot;$(git config user.email)&quot; -f gh-pages -N &quot;&quot;
 </code></pre>
-<p>2.创建项目并配置</p>
+<p>2.github上创建项目并配置</p>
 <ul>
 <li>
-<p>your-github-name.github.io</p>
+<p>创建项目名称：your-github-name.github.io</p>
 </li>
 <li>
 <p>仓库的Settings里的Deploy Keys项目添加key，<code>title</code>为<code>ACTIONS_DEPLOY_KEY</code>，<code>Key</code>填入公钥文件<code>gh-pages.pub</code>的内容，勾选<code>Allow write access</code>；</p>
-<p>在Secrets下的Actions内添加Secrets，<code>Name</code>为<code>ACTIONS_DEPLOY_KEY</code>,Secrets填入私钥文件<code>gh-pages</code>的内容。</p>
+<p>在Secrets下的Actions内添加Secrets，<code>Name</code>为<code>ACTIONS_DEPLOY_KEY</code>,<code>Secrets</code>填入私钥文件<code>gh-pages</code>的内容。</p>
 </li>
 </ul>
-<p>4.推送</p>
-<pre><code class="language-shell"># 并将本地项目的的远端设置为该项目
+<p>3.推送本地项目</p>
+<pre><code class="language-shell"># 初始化当前mdbook工程，并将本地项目的远端设置为新建的git仓库地址
 git init . 
 git add *
 git commit -m &quot;first commit&quot;
@@ -214,7 +214,9 @@ git remote add origin git@github.com:errorcode7/errorcode7.github.io.git
 # push前，保证本地.ssh下的公钥已经添加到github账户Settings的SSH keys
 git push -u origin main
 </code></pre>
+<p>4.检查部署页面</p>
 <p>提交成功后点击仓库里的Actions，查看流水线构建情况。</p>
+<p>提交代码后会触发构建流水线，生成的静态网页会被自动提交到<code>gh-pages</code>分支，触发静态网页部署的流水线，因此每次提交都有两个流水线,源码构建与page部署，其中<code>pages build and deployment</code>是部署到github.io的流水线。</p>
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
@@ -225,8 +227,7 @@ git push -u origin main
     color: #999;
     padding: 2px;">流水线</div>
 </center>
-<p>提交代码后会触发构建流水线，生成的静态网页会被自动提交到<code>gh-pages</code>分支，触发静态网页部署的流水线，因此每次提交都有两个流水线,其中<code>pages build and deployment</code>是部署到github.io。</p>
-<p>如果页面404，到项目的Settings-&gt;Pages下查看Pages site的来源是那个分支，可以手动切换到<code>gh-pages</code>分支，不过要等很久才生效。</p>
+<p><strong>注意</strong>：如果页面404，到项目的Settings-&gt;Pages下查看Pages站点的来源是那个分支，可以手动切换到<code>gh-pages</code>分支，会重新触发Action，要等部署完才生效。</p>
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
