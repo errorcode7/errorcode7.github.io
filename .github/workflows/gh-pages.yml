@@ -15,7 +15,6 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     
-
     steps:
     # clone代码，使用checkout这个action，不带@表示使用最新版本，官方建议带。
       - name: Checkout
@@ -34,4 +33,5 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
           publish_dir: ./book

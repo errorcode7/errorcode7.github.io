@@ -4,9 +4,9 @@
 - 本地修改的markdown丢失，通过静态网页恢复很麻烦。
 
 因此，我们需要CICD流水线帮助我们build & deploy，我们只管提交md源代码即可。
-github的CICD工具很多，当然肯定是他们自亲儿子的Actions最好。
+github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions页就能看到流水线。
 
-gitlab里叫pipelines，github叫workflows，我们只需要在当前工程的 `.github/workflows`下创建yaml格式的流水线控制文件即可。
+gitlab里叫pipelines，github叫workflows，我们只需要在当前mdbook工程的 `.github/workflows`下创建yaml格式的流水线控制文件即可。
 ```shell
 mkdir -p .github/workflows 
 vim .github/workflows/gh-pages.yml
@@ -48,6 +48,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
           publish_dir: ./book
 ```
 
@@ -94,5 +95,22 @@ git push -u origin main
     color: #999;
     padding: 2px;">流水线</div>
 </center>
+
+提交代码后会触发构建流水线，生成的静态网页会被自动提交到`gh-pages`分支，触发静态网页部署的流水线，因此每次提交都有两个流水线,其中`pages build and deployment`是部署到github.io。
+
+如果页面404，到项目的Settings->Pages下查看Pages site的来源是那个分支，可以手动切换到`gh-pages`分支，不过要等很久才生效。
+
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="pic/page.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">page设置</div>
+</center>
+
+当前[pages](http://errorcode7.github.io)工程的仓库地址：<https://github.com/errorcode7/errorcode7.github.io>
 
 >参考：https://github.com/marketplace/actions/mdbook-action
