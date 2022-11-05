@@ -1,5 +1,5 @@
 # mdbook命令
-mdbook的主要命令就是初始工程和启动服务
+mdbook的主要命令就是初始工程和启动服务。
 ## init
 ```shell
 > mdbook init -h
@@ -25,7 +25,7 @@ OPTIONS:
 ```
 ## serve
 ```shell
-mdbook serve -h
+> mdbook serve -h
 mdbook.exe-serve v0.4.21
 Serves a book at http://localhost:3000, and rebuilds it on changes
 
@@ -58,7 +58,7 @@ mdbook init . --title "my book"
 ```shell
 mdbook serve . --open
 ```
-3.现在可以通过在编辑src下的SUMMARY.md中新增章节，新增条目后，会自动创建文件同时更新网页目录。
+3.现在可以通过在编辑src下的SUMMARY.md中新增章节，新增条目后，会自动创建文件,同时更新网页目录。
 
 <center>
     <img style="border-radius: 0.3125em;
@@ -71,7 +71,7 @@ mdbook serve . --open
     padding: 2px;">文件布局</div>
 </center>
 
-serve自动将markdown渲染输出到book目录，因此`.gitignore`文件的的book表示，忽略book目录内的修改触发build。
+serve自动将markdown渲染输出到book目录，因此`.gitignore`文件的book，表示忽略book目录内的修改，防止触发build。
 
 
 
