@@ -3,33 +3,33 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>前言</title>
+        <title>SPDX</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
     </head>
     <body>
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
-            var path_to_root = "";
+            var path_to_root = "../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="前言.html" class="active"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="github/github_page.html"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="linux/SPDX.html"><strong aria-hidden="true">1.3.</strong> SPDX</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../前言.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="../github/github_page.html"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="../linux/SPDX.html" class="active"><strong aria-hidden="true">1.3.</strong> SPDX</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -107,7 +107,7 @@
                     <h1 class="menu-title"></h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                     </div>
@@ -134,18 +134,62 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="前言"><a class="header" href="#前言">前言</a></h1>
-<p>这个是一个用于记录学习资料的博客，使用mdbook把markdown渲染成静态网页，使用github Actions流水线部署到Github Pages。</p>
-<p>mdbook是真正的简单好用，最喜欢的功能是在SUMMARY.md内创建目录，会自动创建文件夹，而且SUMMARY.md可以使用<code>//</code>注释掉不想发布的页面。</p>
-<p>因此第一篇文章将分享如何mdbook部署笔记。</p>
-<p>交流可以到该项目提<a href="https://github.com/errorcode7/errorcode7.github.io/issues">issue</a>。</p>
+                        <h1 id="spdx"><a class="header" href="#spdx">SPDX</a></h1>
+<p>SPDX(Software Package Data Exchange)是一种文件格式，用于记录有关分发给定计算机软件的软件许可证的信息。SPDX 是由 SPDX 工作组编写的，该工作组代表了 20 多个不同的组织，由 Linux 基金会所支持。</p>
+<p>简单的说，就是简化授权说明。</p>
+<h2 id="reuse"><a class="header" href="#reuse">reuse</a></h2>
+<p>该工具用于在文件头添加SPDX格式的版权与license。</p>
+<p>官方用例，init初始reuse，download下载license，addheader添加license到文件头，<code>addheader</code>会根据文件类型自动添加注释。reuse检测。 </p>
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="https://download.fsfe.org/videos/reuse/screencasts/reuse-tool.gif">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">官方用例</div>
+</center>
+可用开源协议：<https://spdx.org/licenses/> ，选一个[GPL-3.0-or-later](https://spdx.org/licenses/GPL-3.0-or-later.html)。
+<pre><code class="language-shell">#新建项目
+git clone -b noncompliant https://github.com/fsfe/reuse-example.git
+
+#初始化,生成文件`.reuse/dep5`
+pip3 install reuse
+cd reuse-example &amp;&amp; reuse init 
+
+#下载协议放到LICENSES/GPL-3.0-or-later.txt，reuse download --all 下载所有
+reuse download GPL-3.0-or-later CC0-1.0
+
+#添加所有文件，不想添加的文件加入.gitignore
+reuse addheader --copyright=&quot;Jane Doe &lt;jane@example.com&gt;&quot; --license=&quot;GPL-3.0-or-later&quot; src/main.c Makefile README.md
+
+reuse addheader --copyright=&quot;Jane Doe &lt;jane@example.com&gt;&quot; --license=&quot;GPL-3.0-or-later&quot; --force-dot-license img/cat.jpg img/dog.jpg
+
+reuse addheader --copyright=&quot;Jane Doe &lt;jane@example.com&gt;&quot; --license=&quot;CC0-1.0&quot; .gitignore
+
+#检测合规，会列举未授权的文件，最终要看到`Congratulations!`才行。
+reuse lint
+</code></pre>
+<h2 id="开源协议分类"><a class="header" href="#开源协议分类">开源协议分类</a></h2>
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="https://picd.zhimg.com/80/253a7b1819e2af555ed0a7e0f11a0b59_720w.webp?source=1940ef5c">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">开源协议分类</div>
+</center>
+<p>参考：https://reuse.software/tutorial/</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="next" href="mdbook/mdbook_cmd.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="../github/github_page.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
                         <div style="clear: both"></div>
                     </nav>
@@ -153,8 +197,8 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="next" href="mdbook/mdbook_cmd.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="../github/github_page.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
             </nav>
 
@@ -163,12 +207,12 @@
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
     </body>
