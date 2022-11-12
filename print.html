@@ -217,7 +217,7 @@ mdbook init . --title &quot;my book&quot;
 <li>本地修改的markdown丢失，通过静态网页恢复很麻烦。</li>
 </ul>
 <p>因此，我们需要CICD流水线帮助我们build &amp; deploy，我们只管提交md源代码即可。
-github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions页就能看到流水线。</p>
+github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions选项就能看到流水线。</p>
 <p>gitlab里叫pipelines，github叫workflows，我们只需要在当前mdbook工程的 <code>.github/workflows</code>下创建yaml格式的流水线控制文件即可。</p>
 <pre><code class="language-shell">mkdir -p .github/workflows 
 vim .github/workflows/gh-pages.yml
@@ -323,7 +323,7 @@ git push -u origin main
 <p>简单的说，就是简化授权说明。</p>
 <h2 id="reuse"><a class="header" href="#reuse">reuse</a></h2>
 <p>该工具用于在文件头添加SPDX格式的版权与license。</p>
-<p>官方用例，init初始reuse，download下载license，addheader添加license到文件头，<code>addheader</code>会根据文件类型自动添加注释。reuse检测。 </p>
+<p>官方用例，init初始reuse，download下载license，addheader添加license到文件头，<code>addheader</code>会根据文件类型自动添加注释,最后reuse lint检测。</p>
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
