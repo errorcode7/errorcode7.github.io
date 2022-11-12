@@ -4,7 +4,7 @@
 - 本地修改的markdown丢失，通过静态网页恢复很麻烦。
 
 因此，我们需要CICD流水线帮助我们build & deploy，我们只管提交md源代码即可。
-github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions页就能看到流水线。
+github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions选项就能看到流水线。
 
 gitlab里叫pipelines，github叫workflows，我们只需要在当前mdbook工程的 `.github/workflows`下创建yaml格式的流水线控制文件即可。
 ```shell

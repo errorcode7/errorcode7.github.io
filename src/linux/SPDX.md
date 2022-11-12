@@ -7,7 +7,7 @@ SPDX(Software Package Data Exchange)是一种文件格式，用于记录有关�
 ## reuse
 该工具用于在文件头添加SPDX格式的版权与license。
 
-官方用例，init初始reuse，download下载license，addheader添加license到文件头，`addheader`会根据文件类型自动添加注释。reuse检测。 
+官方用例，init初始reuse，download下载license，addheader添加license到文件头，`addheader`会根据文件类型自动添加注释,最后reuse lint检测。
 
 <center>
     <img style="border-radius: 0.3125em;
