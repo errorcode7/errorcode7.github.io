@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>github pages</title>
+        <title>x11</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../前言.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="../github/github_page.html" class="active"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="../linux/SPDX.html"><strong aria-hidden="true">1.3.</strong> SPDX</a></li><li class="chapter-item expanded "><a href="../x11/x11.html"><strong aria-hidden="true">1.4.</strong> x11</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../前言.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="../github/github_page.html"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="../linux/SPDX.html"><strong aria-hidden="true">1.3.</strong> SPDX</a></li><li class="chapter-item expanded "><a href="../x11/x11.html" class="active"><strong aria-hidden="true">1.4.</strong> x11</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,126 +144,28 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="github-pages"><a class="header" href="#github-pages">github pages</a></h1>
-<p><a href="https://pages.github.com/">github pages</a> 支持静态网页，我们需要把我们渲染后的mdbook上传到github pages仓库。虽然简单粗暴，但有几个完美主义者不能接受的缺点。</p>
-<ul>
-<li>手动build渲染生成的静态网页再push，diff肯定会很多，看起来不舒服。</li>
-<li>本地修改的markdown丢失，通过静态网页恢复很麻烦。</li>
-</ul>
-<p>因此，我们需要CICD流水线帮助我们build &amp; deploy，我们只管提交md源代码即可。
-github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions选项就能看到流水线。</p>
-<p>gitlab里叫pipelines，github叫workflows，我们只需要在当前mdbook工程的 <code>.github/workflows</code>下创建yaml格式的流水线控制文件即可。</p>
-<pre><code class="language-shell">mkdir -p .github/workflows 
-vim .github/workflows/gh-pages.yml
-</code></pre>
-<p>我们新建的<code>gh-pages.yml</code>内容：</p>
-<pre><code class="language-yml">name: GitHub Pages Site Build and Deploy workflow
-on:
-  # 触发流水线的事件，推送或者合并
-  push:
-    branches:
-      - main
-
-  pull_request:
-    branches:
-      - main
-jobs:
-  build-and-deploy:
-    # 使用构建镜像
-    runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-    
-    # clone代码，使用checkout这个action，不带@表示使用最新版本，官方建议带。
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    # 构建代码，相当于使用别人做的mdbook docker
-      - name: Build and Deploy
-        uses: peaceiris/actions-mdbook@v1
-        with:
-          mdbook-version: 'latest'
-    # 构建代码      
-      - run: mdbook build
-
-    # 部署静态页面
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./book
-</code></pre>
-<p>在提交代码之前需要：</p>
-<p>1.创建ssh密钥对</p>
-<p>密钥对生成在当前目录下，千万不要在工程目录下创建，否则不小心提交上去就悲剧了。</p>
-<pre><code class="language-shell">cd #切换到用户目录去创建
-git config --global user.name yourname
-git config --global user.email yourname@gmail.com
-
-ssh-keygen -t rsa -b 4096 -C &quot;$(git config user.email)&quot; -f gh-pages -N &quot;&quot;
-</code></pre>
-<p>2.github上创建项目并配置</p>
-<ul>
-<li>
-<p>创建项目名称：your-github-name.github.io</p>
-</li>
-<li>
-<p>仓库的Settings里的Deploy Keys项目添加key，<code>title</code>为<code>ACTIONS_DEPLOY_KEY</code>，<code>Key</code>填入公钥文件<code>gh-pages.pub</code>的内容，勾选<code>Allow write access</code>；</p>
-<p>在Secrets下的Actions内添加Secrets，<code>Name</code>为<code>ACTIONS_DEPLOY_KEY</code>,<code>Secrets</code>填入私钥文件<code>gh-pages</code>的内容。</p>
-</li>
-</ul>
-<p>3.推送本地项目</p>
-<pre><code class="language-shell"># 初始化当前mdbook工程，并将本地项目的远端设置为新建的git仓库地址
-git init . 
-git add *
-git commit -m &quot;first commit&quot;
-git branch -M main
-git remote add origin git@github.com:errorcode7/errorcode7.github.io.git
-# push前，保证本地.ssh下的公钥已经添加到github账户Settings的SSH keys
-git push -u origin main
-</code></pre>
-<p>4.检查部署页面</p>
-<p>提交成功后点击仓库里的Actions，查看流水线构建情况。</p>
-<p>提交代码后会触发构建流水线，生成的静态网页会被自动提交到<code>gh-pages</code>分支，触发静态网页部署的流水线，因此每次提交都有两个流水线,源码构建与page部署，其中<code>pages build and deployment</code>是部署到github.io的流水线。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="pic/actions.png">
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">流水线</div>
-</center>
-<p><strong>注意</strong>：如果页面404，到项目的Settings-&gt;Pages下查看Pages站点的来源是那个分支，可以手动切换到<code>gh-pages</code>分支，会重新触发Action，要等部署完才生效。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="pic/page.png">
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">page设置</div>
-</center>
-<p>当前<a href="http://errorcode7.github.io">pages</a>工程的仓库地址：<a href="https://github.com/errorcode7/errorcode7.github.io">https://github.com/errorcode7/errorcode7.github.io</a></p>
+                        <h1 id="x11"><a class="header" href="#x11">x11</a></h1>
+<p>x11是C/S模型,每个主机可以启动多个xserver作为服务器，每个服务器开启一个端口，供客户端连接，每个服务器可以有多个screen(显示器)，因此服务地址的格式为<code>DISPLAY=host:port.screen_number</code>,由于默认端口为6000起步，真实tcp/ip端口为<code>6000+port</code>。</p>
+<p>每个screen可以上可以创建多个窗口。</p>
+<h2 id="xlib"><a class="header" href="#xlib">xlib</a></h2>
+<p>xlib是协议的c语言接口。</p>
+<h3 id="graphicscontext"><a class="header" href="#graphicscontext">GraphicsContext</a></h3>
+<p>绘图操作需要控制数据，通过数据结构保存这些复杂参数，传递给Server。</p>
+<h2 id="xcb"><a class="header" href="#xcb">xcb</a></h2>
+<p>X协议的C语言绑定，相比xlib，占用空间小，延迟低，多线程，可扩展等特性。</p>
 <blockquote>
-<p>参考：https://github.com/marketplace/actions/mdbook-action</p>
+<p>https://www.x.org/wiki/guide/xlib-and-xcb/
+https://www.x.org/releases/current/doc/libxcb/tutorial/index.html</p>
 </blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../mdbook/mdbook_cmd.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../linux/SPDX.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../linux/SPDX.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -271,13 +173,10 @@ git push -u origin main
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../mdbook/mdbook_cmd.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../linux/SPDX.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../linux/SPDX.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
             </nav>
 
         </div>
