@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>github pages</title>
+        <title>3D</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../前言.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="../github/github_page.html" class="active"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="../gpu/3D.html"><strong aria-hidden="true">1.3.</strong> 3D</a></li><li class="chapter-item expanded "><a href="../x11/x11.html"><strong aria-hidden="true">1.4.</strong> x11</a></li><li class="chapter-item expanded "><a href="../linux/SPDX.html"><strong aria-hidden="true">1.5.</strong> SPDX</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../前言.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="../github/github_page.html"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="../gpu/3D.html" class="active"><strong aria-hidden="true">1.3.</strong> 3D</a></li><li class="chapter-item expanded "><a href="../x11/x11.html"><strong aria-hidden="true">1.4.</strong> x11</a></li><li class="chapter-item expanded "><a href="../linux/SPDX.html"><strong aria-hidden="true">1.5.</strong> SPDX</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,124 +144,61 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="github-pages"><a class="header" href="#github-pages">github pages</a></h1>
-<p><a href="https://pages.github.com/">github pages</a> 支持静态网页，我们需要把我们渲染后的mdbook上传到github pages仓库。虽然简单粗暴，但有几个完美主义者不能接受的缺点。</p>
+                        <h1 id="3d渲染基本概念"><a class="header" href="#3d渲染基本概念">3D渲染基本概念</a></h1>
 <ul>
-<li>手动build渲染生成的静态网页再push，diff肯定会很多，看起来不舒服。</li>
-<li>本地修改的markdown丢失，通过静态网页恢复很麻烦。</li>
+<li>顶点(vertex)，描述物体在三维坐标中的向量，一个三角面有三个点，每个顶点有一组三维坐标项链[x,y,z]，物体越复杂，构成的顶点则越多。物体除了顶点还有纹理坐标，法线，顶点色等数据组成，把这一组数据统称vertex buffer,存储数据的格式有很多种。</li>
+<li>index buffer，物体的表面需要上色，三个顶点是构成一个面的最小单元，记录一组顶点下标的数组，叫做index buffer。当我们绘制多边形的时候，传入的是顶点的索引，而非索引数组，可提高代码效率。比如我们绘制四边形的时候，需要传入两个三角形的顶点，当我们用索引记录的时候，只需要传入包含6个顶点的索引的index buffer即可。</li>
+<li>纹理(Texture)，自然界中重复出现的颜色叫做纹理，多种重复出现的纹理可以组合继续重复出现，构成更大的纹理，在二维平面中就是一张图片。顶点的纹理坐标记录着顶点在纹理二维平面中的坐标，3维空间中的顶点通过这个纹理坐标映射到在纹理数据中的坐标，使得每个单元都有对应的颜色。</li>
+<li>光栅化(rasterization)，三角形在屏幕坐标中是由N个正方形像素构成，用颜色填充三角形覆盖范围内的像素的过程叫做光栅化。这个固定的步骤是可以固定计算单元实现，叫做rasterizer。在填充之前，需要将3D空间中的三角形变换为屏幕中的2D三角形。最终的颜色是由材质，纹理，光源等经过就算得出，类似函数y=ax1+bx2+cx3一样多个参数输出，控制最终的输出。(光栅化这个翻译，就不能信达雅吗？)</li>
+<li>着色器(shader),shade本意是阴影，shader最初是用计算光照和阴影的，上色的过程本质就是一个计算的过程，每一个计算的函数也叫做一个shader。因此shader并不只是上色，只要有变换的地方都需要计算，变换千差万别，计算函数也千差万别，因此这部分是可编程的，所谓的shader编程本质就是函数编程。处理顶点的叫vertex shader，处理像素的叫pixel shader，不同的shader出现在流水线(管线)的不同阶段。</li>
+<li>管线(pipline)，将原始数据，像工厂流水线一样，经过各种单元处理，最终生成可以显示输出的帧(framebuffer)对象。</li>
+<li>surface，这是egl的概念，像是一个可以修改的图层或画布，对内管理着它拥有的framebuffer，对外(窗口)表示自己有显示能力，不同操作系统的窗口管理器产生的窗口都可以和surface绑定，让它提供显示能力，不用关心它一个还是多个buffer实现，它可以在屏幕内，也可在以屏幕外。结合Wayland的描述，它可以和背景绑定，窗口绑定，光标绑定。OpenGL只负责将数据渲染成帧，并不负责输出到屏幕。输出屏幕的工作叫做送显示，属于窗口管理器的活儿。早年显卡没有3D渲染加速时候的主要工作就是送显，这个部件叫做<code>Display Controller</code>，kms驱动就是为他服务。操作系统的核心就是管理硬件，抽象成资源，被软件复用，多个应用程序都要输出则需要对显卡复用，首先驱动层面就要支持，其次系统层面要统一管理。渲染产生的帧通过surface被窗口记录，窗口管理器将不同窗口进程的记录的帧通知合成器统一合成，合成器把背景，多个窗口，光标交给硬件合成为一帧，然后送显部件送给显示器显示。全屏游戏独占屏幕，应用显示的帧几乎就是最终送显的帧，手机app这类占用大部分屏幕且状态栏基本没有变化的场景，合成的成本很低。</li>
 </ul>
-<p>因此，我们需要CICD流水线帮助我们build &amp; deploy，我们只管提交md源代码即可。
-github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions选项就能看到流水线。</p>
-<p>gitlab里叫pipelines，github叫workflows，我们只需要在当前mdbook工程的 <code>.github/workflows</code>下创建yaml格式的流水线控制文件即可。</p>
-<pre><code class="language-shell">mkdir -p .github/workflows 
-vim .github/workflows/gh-pages.yml
-</code></pre>
-<p>我们新建的<code>gh-pages.yml</code>内容：</p>
-<pre><code class="language-yml">name: GitHub Pages Site Build and Deploy workflow
-on:
-  # 触发流水线的事件，推送或者合并
-  push:
-    branches:
-      - main
-
-  pull_request:
-    branches:
-      - main
-jobs:
-  build-and-deploy:
-    # 使用构建镜像
-    runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-    
-    # clone代码，使用checkout这个action，不带@表示使用最新版本，官方建议带。
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    # 构建代码，相当于使用别人做的mdbook docker
-      - name: Build and Deploy
-        uses: peaceiris/actions-mdbook@v1
-        with:
-          mdbook-version: 'latest'
-    # 构建代码      
-      - run: mdbook build
-
-    # 部署静态页面
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./book
-</code></pre>
-<p>在提交代码之前需要：</p>
-<p>1.创建ssh密钥对</p>
-<p>密钥对生成在当前目录下，千万不要在工程目录下创建，否则不小心提交上去就悲剧了。</p>
-<pre><code class="language-shell">cd #切换到用户目录去创建
-git config --global user.name yourname
-git config --global user.email yourname@gmail.com
-
-ssh-keygen -t rsa -b 4096 -C &quot;$(git config user.email)&quot; -f gh-pages -N &quot;&quot;
-</code></pre>
-<p>2.github上创建项目并配置</p>
-<ul>
-<li>
-<p>创建项目名称：your-github-name.github.io</p>
-</li>
-<li>
-<p>仓库的Settings里的Deploy Keys项目添加key，<code>title</code>为<code>ACTIONS_DEPLOY_KEY</code>，<code>Key</code>填入公钥文件<code>gh-pages.pub</code>的内容，勾选<code>Allow write access</code>；</p>
-<p>在Secrets下的Actions内添加Secrets，<code>Name</code>为<code>ACTIONS_DEPLOY_KEY</code>,<code>Secrets</code>填入私钥文件<code>gh-pages</code>的内容。</p>
-</li>
-</ul>
-<p>3.推送本地项目</p>
-<pre><code class="language-shell"># 初始化当前mdbook工程，并将本地项目的远端设置为新建的git仓库地址
-git init . 
-git add *
-git commit -m &quot;first commit&quot;
-git branch -M main
-git remote add origin git@github.com:errorcode7/errorcode7.github.io.git
-# push前，保证本地.ssh下的公钥已经添加到github账户Settings的SSH keys
-git push -u origin main
-</code></pre>
-<p>4.检查部署页面</p>
-<p>提交成功后点击仓库里的Actions，查看流水线构建情况。</p>
-<p>提交代码后会触发构建流水线，生成的静态网页会被自动提交到<code>gh-pages</code>分支，触发静态网页部署的流水线，因此每次提交都有两个流水线,源码构建与page部署，其中<code>pages build and deployment</code>是部署到github.io的流水线。</p>
+<p>OpenGL ES3 管线流水线中，API箭头表示可以输入的部分。</p>
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="pic/actions.png">
+    src="https://pic3.zhimg.com/80/v2-05c0d0ad1e65ff4fbedee0b4d8f49316_720w.webp">
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
     color: #999;
-    padding: 2px;">流水线</div>
-</center>
-<p><strong>注意</strong>：如果页面404，到项目的Settings-&gt;Pages下查看Pages站点的来源是那个分支，可以手动切换到<code>gh-pages</code>分支，会重新触发Action，要等部署完才生效。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="pic/page.png">
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">page设置</div>
-</center>
-<p>当前<a href="http://errorcode7.github.io">pages</a>工程的仓库地址：<a href="https://github.com/errorcode7/errorcode7.github.io">https://github.com/errorcode7/errorcode7.github.io</a></p>
+    padding: 2px;">OpenGL ES3 管线图</div>
+</center> 
+<p>vertex shader 实现代码</p>
+<pre><code class="language-c">#version 300 es   // OpenGL ES版本信息
+uniform mat4 u_mvpMatrix;  // 同一变量u_mvpMatrix，它存储组合的模型视图和投影矩阵。
+
+// 描述顶点着色器的输入
+in vec4 a_postion; // 输入顶点位置属性
+in vec4 a_color; // 输入顶点颜色属性
+
+out vec4 v_color; // 存储描述每个顶点颜色的顶点着色器输出
+
+void main(){ // 主函数
+	v_color = a_color; // 读入顶点属性输入a_color，并将其写入顶点输出颜色v_color
+	gl_Position = u_mvpMatrix * a_postion // gl_Position是自动生成的，将变换后的顶点位置写入gl_Position输出
+}
+</code></pre>
+<p>shader的本质就是y=ax1+bx2+cx3这样的矩阵计算，因此，输出入包含变和不变量两个部分，以u_mvpMatrix代表的是[a,b,c]这样的不变部分；a_postion，a_color这类顶点数据则代表做x1,x2这类变化的部分。</p>
 <blockquote>
-<p>参考：https://github.com/marketplace/actions/mdbook-action</p>
+<p>https://www.bilibili.com/video/BV1P44y1V7bu/ 《上帝视角看GPU（1）：图形流水线基础》
+https://vulkan-tutorial.com/Vertex_buffers/Vertex_input_description 《vulkan教程》
+https://blog.csdn.net/xzben/article/details/124107260 《OpenGL 之Texture》
+https://zhuanlan.zhihu.com/p/381327745 《【Learn OpenGL笔记】纹理(Texture)》
+https://zhuanlan.zhihu.com/p/144332091 《计算机图形学七：纹理映射(Texture Mapping)及Mipmap技术》
+https://www.intel.com/content/dam/develop/external/us/en/documents/the-architecture-of-intel-processor-graphics-gen11-r1new.pdf 《Intel核显Display Controller》</p>
 </blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../mdbook/mdbook_cmd.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../github/github_page.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../gpu/3D.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../x11/x11.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -271,11 +208,11 @@ git push -u origin main
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../mdbook/mdbook_cmd.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../github/github_page.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../gpu/3D.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../x11/x11.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

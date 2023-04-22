@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="前言.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="github/github_page.html"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="linux/SPDX.html"><strong aria-hidden="true">1.3.</strong> SPDX</a></li><li class="chapter-item expanded "><a href="x11/x11.html"><strong aria-hidden="true">1.4.</strong> x11</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="前言.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="mdbook/mdbook_cmd.html"><strong aria-hidden="true">1.1.</strong> mdbook</a></li><li class="chapter-item expanded "><a href="github/github_page.html"><strong aria-hidden="true">1.2.</strong> github pages</a></li><li class="chapter-item expanded "><a href="gpu/3D.html"><strong aria-hidden="true">1.3.</strong> 3D</a></li><li class="chapter-item expanded "><a href="x11/x11.html"><strong aria-hidden="true">1.4.</strong> x11</a></li><li class="chapter-item expanded "><a href="linux/SPDX.html"><strong aria-hidden="true">1.5.</strong> SPDX</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -328,6 +328,64 @@ git push -u origin main
 <blockquote>
 <p>参考：https://github.com/marketplace/actions/mdbook-action</p>
 </blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="3d渲染基本概念"><a class="header" href="#3d渲染基本概念">3D渲染基本概念</a></h1>
+<ul>
+<li>顶点(vertex)，描述物体在三维坐标中的向量，一个三角面有三个点，每个顶点有一组三维坐标项链[x,y,z]，物体越复杂，构成的顶点则越多。物体除了顶点还有纹理坐标，法线，顶点色等数据组成，把这一组数据统称vertex buffer,存储数据的格式有很多种。</li>
+<li>index buffer，物体的表面需要上色，三个顶点是构成一个面的最小单元，记录一组顶点下标的数组，叫做index buffer。当我们绘制多边形的时候，传入的是顶点的索引，而非索引数组，可提高代码效率。比如我们绘制四边形的时候，需要传入两个三角形的顶点，当我们用索引记录的时候，只需要传入包含6个顶点的索引的index buffer即可。</li>
+<li>纹理(Texture)，自然界中重复出现的颜色叫做纹理，多种重复出现的纹理可以组合继续重复出现，构成更大的纹理，在二维平面中就是一张图片。顶点的纹理坐标记录着顶点在纹理二维平面中的坐标，3维空间中的顶点通过这个纹理坐标映射到在纹理数据中的坐标，使得每个单元都有对应的颜色。</li>
+<li>光栅化(rasterization)，三角形在屏幕坐标中是由N个正方形像素构成，用颜色填充三角形覆盖范围内的像素的过程叫做光栅化。这个固定的步骤是可以固定计算单元实现，叫做rasterizer。在填充之前，需要将3D空间中的三角形变换为屏幕中的2D三角形。最终的颜色是由材质，纹理，光源等经过就算得出，类似函数y=ax1+bx2+cx3一样多个参数输出，控制最终的输出。(光栅化这个翻译，就不能信达雅吗？)</li>
+<li>着色器(shader),shade本意是阴影，shader最初是用计算光照和阴影的，上色的过程本质就是一个计算的过程，每一个计算的函数也叫做一个shader。因此shader并不只是上色，只要有变换的地方都需要计算，变换千差万别，计算函数也千差万别，因此这部分是可编程的，所谓的shader编程本质就是函数编程。处理顶点的叫vertex shader，处理像素的叫pixel shader，不同的shader出现在流水线(管线)的不同阶段。</li>
+<li>管线(pipline)，将原始数据，像工厂流水线一样，经过各种单元处理，最终生成可以显示输出的帧(framebuffer)对象。</li>
+<li>surface，这是egl的概念，像是一个可以修改的图层或画布，对内管理着它拥有的framebuffer，对外(窗口)表示自己有显示能力，不同操作系统的窗口管理器产生的窗口都可以和surface绑定，让它提供显示能力，不用关心它一个还是多个buffer实现，它可以在屏幕内，也可在以屏幕外。结合Wayland的描述，它可以和背景绑定，窗口绑定，光标绑定。OpenGL只负责将数据渲染成帧，并不负责输出到屏幕。输出屏幕的工作叫做送显示，属于窗口管理器的活儿。早年显卡没有3D渲染加速时候的主要工作就是送显，这个部件叫做<code>Display Controller</code>，kms驱动就是为他服务。操作系统的核心就是管理硬件，抽象成资源，被软件复用，多个应用程序都要输出则需要对显卡复用，首先驱动层面就要支持，其次系统层面要统一管理。渲染产生的帧通过surface被窗口记录，窗口管理器将不同窗口进程的记录的帧通知合成器统一合成，合成器把背景，多个窗口，光标交给硬件合成为一帧，然后送显部件送给显示器显示。全屏游戏独占屏幕，应用显示的帧几乎就是最终送显的帧，手机app这类占用大部分屏幕且状态栏基本没有变化的场景，合成的成本很低。</li>
+</ul>
+<p>OpenGL ES3 管线流水线中，API箭头表示可以输入的部分。</p>
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="https://pic3.zhimg.com/80/v2-05c0d0ad1e65ff4fbedee0b4d8f49316_720w.webp">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">OpenGL ES3 管线图</div>
+</center> 
+<p>vertex shader 实现代码</p>
+<pre><code class="language-c">#version 300 es   // OpenGL ES版本信息
+uniform mat4 u_mvpMatrix;  // 同一变量u_mvpMatrix，它存储组合的模型视图和投影矩阵。
+
+// 描述顶点着色器的输入
+in vec4 a_postion; // 输入顶点位置属性
+in vec4 a_color; // 输入顶点颜色属性
+
+out vec4 v_color; // 存储描述每个顶点颜色的顶点着色器输出
+
+void main(){ // 主函数
+	v_color = a_color; // 读入顶点属性输入a_color，并将其写入顶点输出颜色v_color
+	gl_Position = u_mvpMatrix * a_postion // gl_Position是自动生成的，将变换后的顶点位置写入gl_Position输出
+}
+</code></pre>
+<p>shader的本质就是y=ax1+bx2+cx3这样的矩阵计算，因此，输出入包含变和不变量两个部分，以u_mvpMatrix代表的是[a,b,c]这样的不变部分；a_postion，a_color这类顶点数据则代表做x1,x2这类变化的部分。</p>
+<blockquote>
+<p>https://www.bilibili.com/video/BV1P44y1V7bu/ 《上帝视角看GPU（1）：图形流水线基础》
+https://vulkan-tutorial.com/Vertex_buffers/Vertex_input_description 《vulkan教程》
+https://blog.csdn.net/xzben/article/details/124107260 《OpenGL 之Texture》
+https://zhuanlan.zhihu.com/p/381327745 《【Learn OpenGL笔记】纹理(Texture)》
+https://zhuanlan.zhihu.com/p/144332091 《计算机图形学七：纹理映射(Texture Mapping)及Mipmap技术》
+https://www.intel.com/content/dam/develop/external/us/en/documents/the-architecture-of-intel-processor-graphics-gen11-r1new.pdf 《Intel核显Display Controller》</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="x11"><a class="header" href="#x11">x11</a></h1>
+<p>x11是C/S模型,每个主机可以启动多个xserver作为服务器，每个服务器开启一个端口，供客户端连接，每个服务器可以有多个screen(显示器)，因此服务地址的格式为<code>DISPLAY=host:port.screen_number</code>,由于默认端口为6000起步，真实tcp/ip端口为<code>6000+port</code>。</p>
+<p>每个screen可以上可以创建多个窗口。</p>
+<h2 id="xlib"><a class="header" href="#xlib">xlib</a></h2>
+<p>xlib是协议的c语言接口。</p>
+<h3 id="graphicscontext"><a class="header" href="#graphicscontext">GraphicsContext</a></h3>
+<p>绘图操作需要控制数据，通过数据结构保存这些复杂参数，传递给Server。</p>
+<h2 id="xcb"><a class="header" href="#xcb">xcb</a></h2>
+<p>X协议的C语言绑定，相比xlib，占用空间小，延迟低，多线程，可扩展等特性。</p>
+<blockquote>
+<p>https://www.x.org/wiki/guide/xlib-and-xcb/
+https://www.x.org/releases/current/doc/libxcb/tutorial/index.html</p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="spdx"><a class="header" href="#spdx">SPDX</a></h1>
 <p>SPDX(Software Package Data Exchange)是一种文件格式，用于记录有关分发给定计算机软件的软件许可证的信息。SPDX 是由 SPDX 工作组编写的，该工作组代表了 20 多个不同的组织，由 Linux 基金会所支持。</p>
 <p>简单的说，就是简化授权说明。</p>
@@ -377,19 +435,6 @@ reuse lint
     padding: 2px;">开源协议分类</div>
 </center>
 <p>参考：https://reuse.software/tutorial/</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="x11"><a class="header" href="#x11">x11</a></h1>
-<p>x11是C/S模型,每个主机可以启动多个xserver作为服务器，每个服务器开启一个端口，供客户端连接，每个服务器可以有多个screen(显示器)，因此服务地址的格式为<code>DISPLAY=host:port.screen_number</code>,由于默认端口为6000起步，真实tcp/ip端口为<code>6000+port</code>。</p>
-<p>每个screen可以上可以创建多个窗口。</p>
-<h2 id="xlib"><a class="header" href="#xlib">xlib</a></h2>
-<p>xlib是协议的c语言接口。</p>
-<h3 id="graphicscontext"><a class="header" href="#graphicscontext">GraphicsContext</a></h3>
-<p>绘图操作需要控制数据，通过数据结构保存这些复杂参数，传递给Server。</p>
-<h2 id="xcb"><a class="header" href="#xcb">xcb</a></h2>
-<p>X协议的C语言绑定，相比xlib，占用空间小，延迟低，多线程，可扩展等特性。</p>
-<blockquote>
-<p>https://www.x.org/wiki/guide/xlib-and-xcb/
-https://www.x.org/releases/current/doc/libxcb/tutorial/index.html</p>
-</blockquote>
 
                     </main>
 
