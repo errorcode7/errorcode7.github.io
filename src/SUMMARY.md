@@ -6,4 +6,5 @@
   - [3D](./gpu/3D.md)
   - [x11](./x11/x11.md)
   - [SPDX](./linux/SPDX.md)
+  - [LVGL](./linux/lvgl.md)
   - [Build Zig](./linux/build_zig.md)
