@@ -315,27 +315,13 @@ usr/lib/liblvgl_linux.a
 <h5 id="liblvglso--lvgl-核心库"><a class="header" href="#liblvglso--lvgl-核心库">liblvgl.so- LVGL 核心库</a></h5>
 <p>主要功能：</p>
 <ul>
-<li>
-<p>LVGL 核心功能：包含所有 LVGL 的核心 API 和功能</p>
-</li>
-<li>
-<p>对象系统：lv_obj_* 系列函数，如 lv_obj_create, lv_obj_add_flag 等</p>
-</li>
-<li>
-<p>绘图系统：lv_draw_* 系列函数，如 lv_draw_triangle, lv_draw_triangle_dsc_init 等</p>
-</li>
-<li>
-<p>字体系统：lv_font_* 系列函数和字体数据，如 lv_font_montserrat_24 等</p>
-</li>
-<li>
-<p>显示驱动接口：lv_linux_drm_create, lv_wayland_window_create 等 Linux 特定驱动函数</p>
-</li>
-<li>
-<p>输入设备接口：lv_indev_* 系列函数</p>
-</li>
-<li>
-<p>组管理：lv_group_* 系列函数</p>
-</li>
+<li>LVGL 核心功能：包含所有 LVGL 的核心 API 和功能</li>
+<li>对象系统：lv_obj_* 系列函数，如 lv_obj_create, lv_obj_add_flag 等</li>
+<li>绘图系统：lv_draw_* 系列函数，如 lv_draw_triangle, lv_draw_triangle_dsc_init 等</li>
+<li>字体系统：lv_font_* 系列函数和字体数据，如 lv_font_montserrat_24 等</li>
+<li>显示驱动接口：lv_linux_drm_create, lv_wayland_window_create 等 Linux 特定驱动函数</li>
+<li>输入设备接口：lv_indev_* 系列函数</li>
+<li>组管理：lv_group_* 系列函数</li>
 </ul>
 <h5 id="liblvgl_linuxa---linux-平台特定库"><a class="header" href="#liblvgl_linuxa---linux-平台特定库">liblvgl_linux.a - Linux 平台特定库</a></h5>
 <p>主要功能：</p>
@@ -354,9 +340,9 @@ dpkg-buildpackage -us -uc -tc  -b
 <p>liblvgl9_9.3.0-1_amd64.deb，带动态库。</p>
 <p>liblvgl-dev_9.3.0-1_amd64.deb，带头文件和liblvgl_linux.a，里面的动态库链接到liblvgl9的动态库。</p>
 <p>liblvgl9-dbgsym_9.3.0-1_amd64.deb，带动态库调试符号。</p>
-<p>理论上来说，开发接口是固定的，因此liblvgl-dev名字中是不带9版本，而提供的动态库liblvgl9则需要带版本9，最新liblvgl-dev通过对liblvgl9的依赖实现，保证liblvgl-dev可以使用新的库。</p>
+<p>理论上来说，开发接口是固定的，因此liblvgl-dev名字中是不带版本9，而提供的动态库liblvgl9则需要带版本9，最新liblvgl-dev通过对liblvgl9的依赖，保证liblvgl-dev可以使用新的库。</p>
 <h3 id="4编译测试"><a class="header" href="#4编译测试">4.编译测试</a></h3>
-<p>先按照开发环境</p>
+<p>先安装开发环境</p>
 <pre><code class="language-shell">sudo dpkg -i ../liblvgl9_9.3.0-1_amd64.deb  ../liblvgl-dev_9.3.0-1_amd64.deb
 </code></pre>
 <p>进入example编译例子</p>
