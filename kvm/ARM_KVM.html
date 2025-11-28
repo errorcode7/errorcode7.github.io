@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title></title>
-        <meta name="robots" content="noindex">
+        <title>kvm</title>
 
 
         <!-- Custom HTML head -->
@@ -13,33 +12,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f2a8a5fe.js";
+            window.path_to_searchindex_js = "../searchindex-f2a8a5fe.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-8dad6b7d.js"></script>
+        <script src="../toc-8dad6b7d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -106,7 +105,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -141,7 +140,7 @@
                     <h1 class="menu-title"></h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
 
@@ -175,257 +174,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="前言"><a class="header" href="#前言">前言</a></h1>
-<p>这个是一个用于记录学习资料的博客，使用mdbook把markdown渲染成静态网页，使用github Actions流水线部署到Github Pages。</p>
-<p>mdbook是真正的简单好用，最喜欢的功能是在SUMMARY.md内创建目录，会自动创建文件夹，而且SUMMARY.md可以使用<code>//</code>注释掉不想发布的页面。</p>
-<p>因此第一篇文章将分享如何mdbook部署笔记。</p>
-<p>交流可以到该项目提<a href="https://github.com/errorcode7/errorcode7.github.io/issues">issue</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="mdbook命令"><a class="header" href="#mdbook命令">mdbook命令</a></h1>
-<p>mdbook的主要命令就是初始工程和启动服务。</p>
-<h2 id="init"><a class="header" href="#init">init</a></h2>
-<pre><code class="language-shell">&gt; mdbook init -h
-mdbook.exe-init v0.4.21
-Creates the boilerplate structure and files for a new book
-
-USAGE:
-    mdbook.exe init [OPTIONS] [dir]
-
-ARGS:
-    &lt;dir&gt;    Directory to create the book in
-             (Defaults to the Current Directory when omitted)
-
-OPTIONS:
-        --force              Skips confirmation prompts
-    -h, --help               Print help information
-        --ignore &lt;ignore&gt;    Creates a VCS ignore file (i.e. .gitignore) [possible values: none,
-                             git]
-        --theme              Copies the default theme into your source folder
-        --title &lt;title&gt;      Sets the book title
-    -V, --version            Print version information
-  
-</code></pre>
-<h2 id="serve"><a class="header" href="#serve">serve</a></h2>
-<pre><code class="language-shell">&gt; mdbook serve -h
-mdbook.exe-serve v0.4.21
-Serves a book at http://localhost:3000, and rebuilds it on changes
-
-USAGE:
-    mdbook.exe serve [OPTIONS] [dir]
-
-ARGS:
-    &lt;dir&gt;    Root directory for the book
-             (Defaults to the Current Directory when omitted)
-
-OPTIONS:
-    -d, --dest-dir &lt;dest-dir&gt;    Output directory for the book
-                                 Relative paths are interpreted relative to the book's root
-                                 directory.
-                                 If omitted, mdBook uses build.build-dir from book.toml or defaults
-                                 to `./book`.
-    -h, --help                   Print help information
-    -n, --hostname &lt;hostname&gt;    Hostname to listen on for HTTP connections [default: localhost]
-    -o, --open                   Opens the compiled book in a web browser
-    -p, --port &lt;port&gt;            Port to use for HTTP connections [default: 3000]
-    -V, --version                Print version information
-</code></pre>
-<p>1.初始化工程</p>
-<pre><code class="language-shell">mkdir docs &amp;&amp; cd docs
-mdbook init . --title "my book"
-</code></pre>
-<p>2.启用服务,默认端口是3000，–open会自动打开默认浏览器。</p>
-<pre><code class="language-shell">mdbook serve . --open
-</code></pre>
-<p>3.现在可以通过在编辑src下的SUMMARY.md中新增章节，新增条目后，会自动创建文件,同时更新网页目录。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="mdbook/pic/pic1.png">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">文件布局</div>
-
-</center>
-<p>serve自动将markdown渲染输出到book目录，因此<code>.gitignore</code>文件的book，表示忽略book目录内的修改，防止触发build。</p>
-<blockquote>
-<p>参考：https://rust-lang.github.io/mdBook/index.html</p>
-</blockquote>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="github-pages"><a class="header" href="#github-pages">github pages</a></h1>
-<p><a href="https://pages.github.com/">github pages</a> 支持静态网页，我们需要把我们渲染后的mdbook上传到github pages仓库。虽然简单粗暴，但有几个完美主义者不能接受的缺点。</p>
-<ul>
-<li>手动build渲染生成的静态网页再push，diff肯定会很多，看起来不舒服。</li>
-<li>本地修改的markdown丢失，通过静态网页恢复很麻烦。</li>
-</ul>
-<p>因此，我们需要CICD流水线帮助我们build &amp; deploy，我们只管提交md源代码即可。
-github的CICD工具很多，当然肯定是他们自亲儿子Actions最好，点击仓库中的Actions选项就能看到流水线。</p>
-<p>gitlab里叫pipelines，github叫workflows，我们只需要在当前mdbook工程的 <code>.github/workflows</code>下创建yaml格式的流水线控制文件即可。</p>
-<pre><code class="language-shell">mkdir -p .github/workflows 
-vim .github/workflows/gh-pages.yml
-</code></pre>
-<p>我们新建的<code>gh-pages.yml</code>内容：</p>
-<pre><code class="language-yml">name: GitHub Pages Site Build and Deploy workflow
-on:
-  # 触发流水线的事件，推送或者合并
-  push:
-    branches:
-      - main
-
-  pull_request:
-    branches:
-      - main
-jobs:
-  build-and-deploy:
-    # 使用构建镜像
-    runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-    
-    # clone代码，使用checkout这个action，不带@表示使用最新版本，官方建议带。
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    # 构建代码，相当于使用别人做的mdbook docker
-      - name: Build and Deploy
-        uses: peaceiris/actions-mdbook@v1
-        with:
-          mdbook-version: 'latest'
-    # 构建代码      
-      - run: mdbook build
-
-    # 部署静态页面
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./book
-</code></pre>
-<p>在提交代码之前需要：</p>
-<p>1.创建ssh密钥对</p>
-<p>密钥对生成在当前目录下，千万不要在工程目录下创建，否则不小心提交上去就悲剧了。</p>
-<pre><code class="language-shell">cd #切换到用户目录去创建
-git config --global user.name yourname
-git config --global user.email yourname@gmail.com
-
-ssh-keygen -t rsa -b 4096 -C "$(git config user.email)" -f gh-pages -N ""
-</code></pre>
-<p>2.github上创建项目并配置</p>
-<ul>
-<li>
-<p>创建项目名称：your-github-name.github.io</p>
-</li>
-<li>
-<p>仓库的Settings里的Deploy Keys项目添加key，<code>title</code>为<code>ACTIONS_DEPLOY_KEY</code>，<code>Key</code>填入公钥文件<code>gh-pages.pub</code>的内容，勾选<code>Allow write access</code>；</p>
-<p>在Secrets下的Actions内添加Secrets，<code>Name</code>为<code>ACTIONS_DEPLOY_KEY</code>,<code>Secrets</code>填入私钥文件<code>gh-pages</code>的内容。</p>
-</li>
-</ul>
-<p>3.推送本地项目</p>
-<pre><code class="language-shell"># 初始化当前mdbook工程，并将本地项目的远端设置为新建的git仓库地址
-git init . 
-git add *
-git commit -m "first commit"
-git branch -M main
-git remote add origin git@github.com:errorcode7/errorcode7.github.io.git
-# push前，保证本地.ssh下的公钥已经添加到github账户Settings的SSH keys
-git push -u origin main
-</code></pre>
-<p>4.检查部署页面</p>
-<p>提交成功后点击仓库里的Actions，查看流水线构建情况。</p>
-<p>提交代码后会触发构建流水线，生成的静态网页会被自动提交到<code>gh-pages</code>分支，触发静态网页部署的流水线，因此每次提交都有两个流水线,源码构建与page部署，其中<code>pages build and deployment</code>是部署到github.io的流水线。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="github/pic/actions.png">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">流水线</div>
-
-</center>
-<p><strong>注意</strong>：如果页面404，到项目的Settings-&gt;Pages下查看Pages站点的来源是那个分支，可以手动切换到<code>gh-pages</code>分支，会重新触发Action，要等部署完才生效。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="github/pic/page.png">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">page设置</div>
-
-</center>
-<p>当前<a href="http://errorcode7.github.io">pages</a>工程的仓库地址：<a href="https://github.com/errorcode7/errorcode7.github.io">https://github.com/errorcode7/errorcode7.github.io</a></p>
-<blockquote>
-<p>参考：https://github.com/marketplace/actions/mdbook-action</p>
-</blockquote>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="3d渲染基本概念"><a class="header" href="#3d渲染基本概念">3D渲染基本概念</a></h1>
-<ul>
-<li>顶点(vertex)，描述物体在三维坐标中的向量，一个三角面有三个点，每个顶点有一组三维坐标项链[x,y,z]，物体越复杂，构成的顶点则越多。物体除了顶点还有纹理坐标，法线，顶点色等数据组成，把这一组数据统称vertex buffer,存储数据的格式有很多种。</li>
-<li>index buffer，物体的表面需要上色，三个顶点是构成一个面的最小单元，记录一组顶点下标的数组，叫做index buffer。当我们绘制多边形的时候，传入的是顶点的索引，而非索引数组，可提高代码效率。比如我们绘制四边形的时候，需要传入两个三角形的顶点，当我们用索引记录的时候，只需要传入包含6个顶点的索引的index buffer即可。</li>
-<li>纹理(Texture)，自然界中重复出现的颜色叫做纹理，多种重复出现的纹理可以组合继续重复出现，构成更大的纹理，在二维平面中就是一张图片。顶点的纹理坐标记录着顶点在纹理二维平面中的坐标，3维空间中的顶点通过这个纹理坐标映射到在纹理数据中的坐标，使得每个单元都有对应的颜色。</li>
-<li>光栅化(rasterization)，三角形在屏幕坐标中是由N个正方形像素构成，用颜色填充三角形覆盖范围内的像素的过程叫做光栅化。这个固定的步骤是可以固定计算单元实现，叫做rasterizer。在填充之前，需要将3D空间中的三角形变换为屏幕中的2D三角形。最终的颜色是由材质，纹理，光源等经过就算得出，类似函数y=ax1+bx2+cx3一样多个参数输出，控制最终的输出。(光栅化这个翻译，就不能信达雅吗？)</li>
-<li>着色器(shader),shade本意是阴影，shader最初是用计算光照和阴影的，上色的过程本质就是一个计算的过程，每一个计算的函数也叫做一个shader。因此shader并不只是上色，只要有变换的地方都需要计算，变换千差万别，计算函数也千差万别，因此这部分是可编程的，所谓的shader编程本质就是函数编程。处理顶点的叫vertex shader，处理像素的叫pixel shader，不同的shader出现在流水线(管线)的不同阶段。</li>
-<li>管线(pipline)，将原始数据，像工厂流水线一样，经过各种单元处理，最终生成可以显示输出的帧(framebuffer)对象。</li>
-<li>surface，这是egl的概念，像是一个可以修改的图层或画布，对内管理着它拥有的framebuffer，对外(窗口)表示自己有显示能力，不同操作系统的窗口管理器产生的窗口都可以和surface绑定，让它提供显示能力，不用关心它一个还是多个buffer实现，它可以在屏幕内，也可在以屏幕外。结合Wayland的描述，它可以和背景绑定，窗口绑定，光标绑定。OpenGL只负责将数据渲染成帧，并不负责输出到屏幕。输出屏幕的工作叫做送显示，属于窗口管理器的活儿。早年显卡没有3D渲染加速时候的主要工作就是送显，这个部件叫做<code>Display Controller</code>，kms驱动就是为他服务。操作系统的核心就是管理硬件，抽象成资源，被软件复用，多个应用程序都要输出则需要对显卡复用，首先驱动层面就要支持，其次系统层面要统一管理。渲染产生的帧通过surface被窗口记录，窗口管理器将不同窗口进程的记录的帧通知合成器统一合成，合成器把背景，多个窗口，光标交给硬件合成为一帧，然后送显部件送给显示器显示。全屏游戏独占屏幕，应用显示的帧几乎就是最终送显的帧，手机app这类占用大部分屏幕且状态栏基本没有变化的场景，合成的成本很低。</li>
-</ul>
-<p>OpenGL ES3 管线流水线中，API箭头表示可以输入的部分。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="https://pic3.zhimg.com/80/v2-05c0d0ad1e65ff4fbedee0b4d8f49316_720w.webp">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">OpenGL ES3 管线图</div>
-
-</center> 
-<p>vertex shader 实现代码</p>
-<pre><code class="language-c">#version 300 es   // OpenGL ES版本信息
-uniform mat4 u_mvpMatrix;  // 同一变量u_mvpMatrix，它存储组合的模型视图和投影矩阵。
-
-// 描述顶点着色器的输入
-in vec4 a_postion; // 输入顶点位置属性
-in vec4 a_color; // 输入顶点颜色属性
-
-out vec4 v_color; // 存储描述每个顶点颜色的顶点着色器输出
-
-void main(){ // 主函数
-	v_color = a_color; // 读入顶点属性输入a_color，并将其写入顶点输出颜色v_color
-	gl_Position = u_mvpMatrix * a_postion // gl_Position是自动生成的，将变换后的顶点位置写入gl_Position输出
-}
-</code></pre>
-<p>shader的本质就是y=ax1+bx2+cx3这样的矩阵计算，因此，输出入包含变和不变量两个部分，以u_mvpMatrix代表的是[a,b,c]这样的不变部分；a_postion，a_color这类顶点数据则代表做x1,x2这类变化的部分。</p>
-<blockquote>
-<p>https://www.bilibili.com/video/BV1P44y1V7bu/ 《上帝视角看GPU（1）：图形流水线基础》
-https://vulkan-tutorial.com/Vertex_buffers/Vertex_input_description 《vulkan教程》
-https://blog.csdn.net/xzben/article/details/124107260 《OpenGL 之Texture》
-https://zhuanlan.zhihu.com/p/381327745 《【Learn OpenGL笔记】纹理(Texture)》
-https://zhuanlan.zhihu.com/p/144332091 《计算机图形学七：纹理映射(Texture Mapping)及Mipmap技术》
-https://www.intel.com/content/dam/develop/external/us/en/documents/the-architecture-of-intel-processor-graphics-gen11-r1new.pdf 《Intel核显Display Controller》</p>
-</blockquote>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="x11"><a class="header" href="#x11">x11</a></h1>
-<p>x11是C/S模型,每个主机可以启动多个xserver作为服务器，每个服务器开启一个端口，供客户端连接，每个服务器可以有多个screen(显示器)，因此服务地址的格式为<code>DISPLAY=host:port.screen_number</code>,由于默认端口为6000起步，真实tcp/ip端口为<code>6000+port</code>。</p>
-<p>每个screen可以上可以创建多个窗口。</p>
-<h2 id="xlib"><a class="header" href="#xlib">xlib</a></h2>
-<p>xlib是协议的c语言接口。</p>
-<h3 id="graphicscontext"><a class="header" href="#graphicscontext">GraphicsContext</a></h3>
-<p>绘图操作需要控制数据，通过数据结构保存这些复杂参数，传递给Server。</p>
-<h2 id="xcb"><a class="header" href="#xcb">xcb</a></h2>
-<p>X协议的C语言绑定，相比xlib，占用空间小，延迟低，多线程，可扩展等特性。</p>
-<blockquote>
-<p>https://www.x.org/wiki/guide/xlib-and-xcb/
-https://www.x.org/releases/current/doc/libxcb/tutorial/index.html</p>
-</blockquote>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="arm-kvm上下文切换机制分析"><a class="header" href="#arm-kvm上下文切换机制分析">ARM KVM上下文切换机制分析</a></h1>
+                        <h1 id="arm-kvm上下文切换机制分析"><a class="header" href="#arm-kvm上下文切换机制分析">ARM KVM上下文切换机制分析</a></h1>
 <hr>
 <h2 id="概述"><a class="header" href="#概述">概述</a></h2>
 <p>本文档深入分析ARM架构中KVM（Kernel-based Virtual Machine）的上下文切换机制，重点解析<code>__kvm_vcpu_run_vhe</code>函数的工作原理和上下文切换的具体实现。本文需要有一定的知识，如中断、系统调用、x86虚拟化、arm异常级别，虚拟地址翻译等。</p>
@@ -546,7 +295,7 @@ https://www.x.org/releases/current/doc/libxcb/tutorial/index.html</p>
 <center>
     <br>
     <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="kvm/pic/arm-kvm.jpg" width="80%">
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="pic/arm-kvm.jpg" width="80%">
     <br>
     
 <div style="color:orange; border-bottom: 1px solid #d9d9d9;
@@ -881,7 +630,7 @@ HCR_EL2.E2H = 1（Enable EL2 Host）,    当此位为 1 时，EL2 的行为被�
 <p>最终，本质上kvm和内核都工作在EL2，host上只有EL0和EL2，根x86差不多。</p>
 <center>
     <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="kvm/pic/vhe.svg" width="50%">
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="pic/vhe.svg" width="50%">
     <br>
     
 <div style="color:orange; border-bottom: 1px solid #d9d9d9;
@@ -1429,349 +1178,18 @@ Per-CPU Host状态
 </code></pre>
 <hr>
 <p><em>参考文件：arch/arm64/kvm/arm.c, arch/arm64/kvm/hyp/</em>/switch.c, arch/arm64/kvm/hyp/entry.S</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="spdx"><a class="header" href="#spdx">SPDX</a></h1>
-<p>SPDX(Software Package Data Exchange)是一种文件格式，用于记录有关分发给定计算机软件的软件许可证的信息。SPDX 是由 SPDX 工作组编写的，该工作组代表了 20 多个不同的组织，由 Linux 基金会所支持。</p>
-<p>简单的说，就是简化授权说明。</p>
-<h2 id="reuse"><a class="header" href="#reuse">reuse</a></h2>
-<p>该工具用于在文件头添加SPDX格式的版权与license。</p>
-<p>官方用例，init初始reuse，download下载license，addheader添加license到文件头，<code>addheader</code>会根据文件类型自动添加注释,最后reuse lint检测。</p>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="https://download.fsfe.org/videos/reuse/screencasts/reuse-tool.gif">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">官方用例</div>
-
-</center>
-可用开源协议：<https: spdx.org="" licenses="" /> ，选一个[GPL-3.0-or-later](https://spdx.org/licenses/GPL-3.0-or-later.html)。
-<pre><code class="language-shell">#新建项目
-git clone -b noncompliant https://github.com/fsfe/reuse-example.git
-
-#初始化,生成文件`.reuse/dep5`
-pip3 install reuse
-cd reuse-example &amp;&amp; reuse init 
-
-#下载协议放到LICENSES/GPL-3.0-or-later.txt，reuse download --all 下载所有
-reuse download GPL-3.0-or-later CC0-1.0
-
-#添加所有文件，不想添加的文件加入.gitignore
-reuse addheader --copyright="Jane Doe &lt;jane@example.com&gt;" --license="GPL-3.0-or-later" src/main.c Makefile README.md
-
-reuse addheader --copyright="Jane Doe &lt;jane@example.com&gt;" --license="GPL-3.0-or-later" --force-dot-license img/cat.jpg img/dog.jpg
-
-reuse addheader --copyright="Jane Doe &lt;jane@example.com&gt;" --license="CC0-1.0" .gitignore
-
-#检测合规，会列举未授权的文件，最终要看到`Congratulations!`才行。
-reuse lint
-</code></pre>
-<h2 id="开源协议分类"><a class="header" href="#开源协议分类">开源协议分类</a></h2>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="https://picd.zhimg.com/80/253a7b1819e2af555ed0a7e0f11a0b59_720w.webp?source=1940ef5c">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">开源协议分类</div>
-
-</center>
-<p>参考：https://reuse.software/tutorial/</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="lvgl"><a class="header" href="#lvgl">LVGL</a></h1>
-<p>在linux下使用lvgl编写gui程序，使用lv_port_linux编译出动态库，简化在linux的开发环境流程。</p>
-<h2 id="制作debian包"><a class="header" href="#制作debian包">制作Debian包</a></h2>
-<h3 id="1安装环境"><a class="header" href="#1安装环境">1.安装环境</a></h3>
-<pre><code class="language-shell">sudo apt update
-sudo apt install pkg-config
-sudo apt install libwayland-dev libxkbcommon-dev libwayland-bin wayland-protocols libdrm-dev
-</code></pre>
-<h3 id="2修改lv_port_linux的一些默认配置"><a class="header" href="#2修改lv_port_linux的一些默认配置">2.修改lv_port_linux的一些默认配置</a></h3>
-<p>CMakeLists.txt,，方便编译动态库。</p>
-<pre><code class="language-shell"> # Link LVGL with external dependencies - Modern CMake/CMP0079 allows this
--target_link_libraries(lvgl PUBLIC ${PKG_CONFIG_LIB} m pthread)
-+target_link_libraries(lvgl PUBLIC ${PKG_CONFIG_LIB} m pthread rt)
-</code></pre>
-<p>编译开关</p>
-<p>LV_USE_PRIVATE_API，打包dev开发包的时候，私有头文件也要包含，否则会找不到头文件。</p>
-<p>LV_USE_WAYLAND，启用wayland后端</p>
-<p>LV_WAYLAND_WINDOW_DECORATIONS，开启这个，可以使得wayland窗口管理器管理app，否则app无法拖动。</p>
-<p>LV_USE_LINUX_DRM，使用DRM后端</p>
-<pre><code class="language-shell"> /** Include `lvgl_private.h` in `lvgl.h` to access internal data and functions by default */
- #ifndef LV_USE_PRIVATE_API
--    #define LV_USE_PRIVATE_API  0
-+    #define LV_USE_PRIVATE_API  1
- #endif
-
- 
- /** Use Wayland to open a window and handle input on Linux or BSD desktops */
--#define LV_USE_WAYLAND          0
-+#define LV_USE_WAYLAND          1
- #if LV_USE_WAYLAND
-
-/**&lt; When LV_WAYLAND_USE_DMABUF is disabled, only LV_DISPLAY_RENDER_MODE_PARTIAL is supported*/
--    #define LV_WAYLAND_WINDOW_DECORATIONS   0    /**&lt; Draw client side window decorations only necessary on Mutter/GNOME. Not supported using DMABUF*/
-+    #define LV_WAYLAND_WINDOW_DECORATIONS   1    /**&lt; Draw client side window decorations only necessary on Mutter/GNOME. Not supported using DMABUF*/
-     #define LV_WAYLAND_WL_SHELL             0    /**&lt; Use the legacy wl_shell protocol instead of the default XDG shell*/
- #endif
-
- /** Driver for /dev/dri/card */
--#define LV_USE_LINUX_DRM        0
-+#define LV_USE_LINUX_DRM        1
- 
- #if LV_USE_LINUX_DRM
-</code></pre>
-<p>3.创建Debian构建文件</p>
-<pre><code class="language-shell">cd lv_port_linux &amp;&amp; mkdir -p debian &amp;&amp; cd debian
-</code></pre>
-<p>添加control文件</p>
-<pre><code class="language-shell">Source: lvgl
-Section: libs
-Priority: optional
-Maintainer: LVGL Maintainer &lt;maintainer@example.com&gt;
-Build-Depends: debhelper-compat (= 13), cmake, pkg-config, libwayland-dev, wayland-protocols, libxkbcommon-dev, libdrm-dev
-Standards-Version: 4.6.2
-Homepage: https://lvgl.io
-
-Package: liblvgl9
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: LittlevGL runtime library
- LVGL graphics library runtime shared objects.
-
-Package: liblvgl-dev
-Architecture: any
-Depends: liblvgl9 (= ${binary:Version}), ${misc:Depends}
-Description: LittlevGL development files (headers, pkg-config)
- Development headers, shared libs and pkg-config for LVGL.
-</code></pre>
-<p>添加rules</p>
-<pre><code class="language-shell">#!/usr/bin/make -f
-export DH_VERBOSE=1
-
-%:
-	dh $@ --buildsystem=cmake
-
-#编译动态库
-override_dh_auto_configure:
-	# 可选：若需从 lv_conf.defaults 生成 lv_conf.h
-	# python3 lvgl/scripts/generate_lv_conf.py .
-	bash ./scripts/gen_wl_protocols.sh ./protocols
-	# 解决 Wayland 协议生成代码中符号可见性为 hidden 导致 DSO 链接失败
-	sed -i 's/^#define WL_PRIVATE __attribute__ ((visibility("hidden")))/#define WL_PRIVATE/' ./protocols/wayland_xdg_shell.c || true
-	dh_auto_configure --builddirectory=build -- \
-	  -DCMAKE_INSTALL_PREFIX=/usr \
-	  -DBUILD_SHARED_LIBS=ON \
-	  -DLIB_INSTALL_DIR=lib/${DEB_HOST_MULTIARCH} \
-	  -DCMAKE_C_FLAGS='-DWL_PRIVATE=' \
-	  -DCMAKE_EXE_LINKER_FLAGS='-Wl,--export-dynamic' \
-	  -DLV_BUILD_EXAMPLES=ON \
-	  -DLV_BUILD_DEMOS=ON
-
-override_dh_auto_build:
-	# Wayland scanner generates hidden symbols; neutralize before linking
-	sed -i 's/^#define WL_PRIVATE __attribute__ ((visibility("hidden")))/#define WL_PRIVATE/' build/protocols/wayland_xdg_shell.c || true
-	dh_auto_build --builddirectory=build -- -j$(nproc)
-
-override_dh_auto_install:
-	dh_auto_install --builddirectory=build --destdir=$(CURDIR)/debian/tmp
-	# 等同于：DESTDIR=$(CURDIR)/debian/tmp cmake --install build
-
-override_dh_auto_clean:
-	# 保持与 out-of-source 一致的清理
-	dh_auto_clean --builddirectory=build || true
-
-override_dh_auto_test:
-</code></pre>
-<p>添加install文件</p>
-<p>liblvgl9.install</p>
-<pre><code>usr/lib/*/liblvgl.so.*
-usr/lib/*/liblvgl_demos.so.*
-usr/lib/*/liblvgl_examples.so.*
-usr/lib/*/liblvgl_thorvg.so.*
-</code></pre>
-<p>liblvgl-dev.install</p>
-<pre><code class="language-shell">usr/include/lvgl/
-usr/share/pkgconfig/lvgl.pc
-usr/lib/*/liblvgl.so
-usr/lib/*/liblvgl_demos.so
-usr/lib/*/liblvgl_examples.so
-usr/lib/*/liblvgl_thorvg.so
-usr/lib/liblvgl_linux.a
-</code></pre>
-<h4 id="liblvgl_linuxa为什么不改成动态库"><a class="header" href="#liblvgl_linuxa为什么不改成动态库">liblvgl_linux.a为什么不改成动态库？</a></h4>
-<ul>
-<li>
-<p>目标在 CMake 中被明确声明为 STATIC：项目把平台封装/后端适配层做成了内部静态库（add_library(lvgl_linux STATIC …)），默认不会随 -DBUILD_SHARED_LIBS=ON 变成动态库。要修改，则会大量的地方修改适配。</p>
-</li>
-<li>
-<p>仅供内部链接、非稳定 ABI：lvgl_linux 属于本仓库的“Linux 适配层”，主要被可执行程序或 liblvgl.so 内部使用，没承诺对外 ABI 稳定，不适合作为独立 .so 提供。</p>
-</li>
-<li>
-<p>Wayland 生成代码的符号可见性问题：wayland-scanner 生成的 wayland_xdg_shell.c 使用 WL_PRIVATE 把接口标记为隐藏，直接做成 .so 会出现“hidden symbol is referenced by DSO”的链接问题，需要额外处理（我们在打包时通过 -DWL_PRIVATE= 和 –export-dynamic 才解决）。</p>
-</li>
-<li>
-<p>避免循环依赖与依赖膨胀：如果把 lvgl_linux 做成共享库，很容易与 liblvgl.so、liblvgl_examples.so、liblvgl_demos.so 形成相互引用，导致复杂的运行时依赖和 shlibdeps 噪音。当前方案是把对外 .so 限定在核心和演示库，其它平台层静态链接使用。</p>
-</li>
-</ul>
-<h4 id="liblvglso-和-liblvgl_linuxa-的区别"><a class="header" href="#liblvglso-和-liblvgl_linuxa-的区别">liblvgl.so 和 liblvgl_linux.a 的区别?</a></h4>
-<h5 id="liblvglso--lvgl-核心库"><a class="header" href="#liblvglso--lvgl-核心库">liblvgl.so- LVGL 核心库</a></h5>
-<p>主要功能：</p>
-<ul>
-<li>LVGL 核心功能：包含所有 LVGL 的核心 API 和功能</li>
-<li>对象系统：lv_obj_* 系列函数，如 lv_obj_create, lv_obj_add_flag 等</li>
-<li>绘图系统：lv_draw_* 系列函数，如 lv_draw_triangle, lv_draw_triangle_dsc_init 等</li>
-<li>字体系统：lv_font_* 系列函数和字体数据，如 lv_font_montserrat_24 等</li>
-<li>显示驱动接口：lv_linux_drm_create, lv_wayland_window_create 等 Linux 特定驱动函数</li>
-<li>输入设备接口：lv_indev_* 系列函数</li>
-<li>组管理：lv_group_* 系列函数</li>
-</ul>
-<h5 id="liblvgl_linuxa---linux-平台特定库"><a class="header" href="#liblvgl_linuxa---linux-平台特定库">liblvgl_linux.a - Linux 平台特定库</a></h5>
-<p>主要功能：</p>
-<ul>
-<li>驱动后端管理：driver_backends_* 系列函数</li>
-<li>后端初始化：backend_init_* 系列函数</li>
-<li>Wayland 协议接口：包含 Wayland XDG 协议的接口定义</li>
-<li>平台特定实现：Linux 特定的驱动初始化和运行循环</li>
-</ul>
-<h3 id="3构建deb包"><a class="header" href="#3构建deb包">3.构建deb包</a></h3>
-<pre><code class="language-shell">cd lv_port_linux/
-sudo apt build-dep .
-dpkg-buildpackage -us -uc -tc  -b
-</code></pre>
-<p>生成三个包：</p>
-<p>liblvgl9_9.3.0-1_amd64.deb，带动态库。</p>
-<p>liblvgl-dev_9.3.0-1_amd64.deb，带头文件和liblvgl_linux.a，里面的动态库链接到liblvgl9的动态库。</p>
-<p>liblvgl9-dbgsym_9.3.0-1_amd64.deb，带动态库调试符号。</p>
-<p>理论上来说，开发接口是固定的，因此liblvgl-dev名字中是不带版本9，而提供的动态库liblvgl9则需要带版本9，最新liblvgl-dev通过对liblvgl9的依赖，保证liblvgl-dev可以使用新的库。</p>
-<h3 id="4编译测试"><a class="header" href="#4编译测试">4.编译测试</a></h3>
-<p>先安装开发环境</p>
-<pre><code class="language-shell">sudo dpkg -i ../liblvgl9_9.3.0-1_amd64.deb  ../liblvgl-dev_9.3.0-1_amd64.deb
-</code></pre>
-<p>进入example编译例子</p>
-<pre><code class="language-shell">cd lv_port_linux/example/
-cmake -B build -S .
-make -C build -j
-#运行例子
-./bin/main
-</code></pre>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="linux/pic/lvgl.gif">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">example例子</div>
-
-</center>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="build-zig"><a href="#build-zig" class="header">Build Zig</a></h1>
-<h2 id="源码编译zig"><a class="header" href="#源码编译zig">源码编译zig</a></h2>
-<h3 id="添加llvm18的源"><a class="header" href="#添加llvm18的源">添加llvm18的源</a></h3>
-<p>zig要求这个版本</p>
-<pre><code class="language-shell"># uos v20
-deb http://apt.llvm.org/buster/ llvm-toolchain-buster main
-deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster main
-# 18 
-deb http://apt.llvm.org/buster/ llvm-toolchain-buster-18 main
-deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster-18 main
-# 19 
-deb http://apt.llvm.org/buster/ llvm-toolchain-buster-19 main
-deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster-19 main
-
-# deepin v23
-deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm main
-deb-src http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm main
-# 18 
-deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-18 main
-deb-src http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-18 main
-# 19 
-deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-19 main
-deb-src http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-19 main
-</code></pre>
-<pre><code class="language-shell">https://apt.llvm.org/
-wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
-</code></pre>
-<blockquote>
-<p>https://apt.llvm.org/</p>
-</blockquote>
-<h3 id="配置编译环境"><a class="header" href="#配置编译环境">配置编译环境</a></h3>
-<pre><code class="language-shell">sudo apt install -y build-essential cmake clang-18 libclang-18-dev libclang-cpp18-dev llvm-18 llvm-18-dev lld-18 liblld-18-dev libpolly-18-dev libllvm18
-</code></pre>
-<pre><code class="language-shell">alias llvm-config=/lib/llvm-18/bin/llvm-config
-llvm-config --cxxflags --ldflags --system-libs --libs core
-</code></pre>
-<blockquote>
-<p>https://github.com/ziglang/zig/issues/419</p>
-</blockquote>
-<h3 id="下载zig源码编译"><a class="header" href="#下载zig源码编译">下载zig源码编译</a></h3>
-<p>在build目录构建，方便删除</p>
-<pre><code class="language-shell">git clone https://mirror.ghproxy.com/https://github.com/ziglang/zig.git
-cd zig
-mkdir build
-cd build
-cmake ..  -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18  -DZIG_STATIC_LLVM=ON
-make
-</code></pre>
-<blockquote>
-<p>https://github.com/ziglang/zig/wiki/Building-Zig-From-Source</p>
-</blockquote>
-<p>以上步骤为了验证是否能正常打包。</p>
-<h2 id="构建debian包"><a class="header" href="#构建debian包">构建debian包</a></h2>
-<h3 id="准备环境"><a class="header" href="#准备环境">准备环境</a></h3>
-<pre><code class="language-shell">sudo apt install dh-make
-</code></pre>
-<h3 id="制作debian文件"><a class="header" href="#制作debian文件">制作debian文件</a></h3>
-<p>生成debian目录</p>
-<pre><code class="language-shell">#移除编译build目录，否则--createorig参数创建源码包会包含这些
-rm -rf build
-
-#获取最新tag信息,用于作为debian版本
-ver=$(git describe --tags --abbrev=0)
-git checkout $ver
-dh_make  -p zig_$ver  -s -y --createorig
-rm -f debian/*.ex
-</code></pre>
-<p>编辑debian内的文件,关键是添加Build-Depends，方便<code>apt build-dep .</code>自动下载打包依赖。
-如果有修改，需要<code>dch -i</code>命令添加changelog</p>
-<p>debian/control文件内容。</p>
-<pre><code class="language-shell">Source: zig
-Section: devel
-Priority: optional
-Maintainer: errorcode7 &lt;errorcode7@qq.com&gt;
-Build-Depends: debhelper (&gt;= 11),dh-make,dpkg-dev,build-essential,cmake,clang-18,libclang-18-dev,libclang-cpp18-dev,llvm-18,llvm-18-dev,lld-18,liblld-18-dev,libpolly-18-dev,libllvm18
-Standards-Version: 4.1.3
-Homepage: https://ziglang.org/
-Vcs-Git: https://github.com/ziglang/zig
-
-Package: zig
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Zig is a general-purpose programming language and toolchain for maintaining robust, optimal and reusable software.
-</code></pre>
-<blockquote>
-<p>https://github.com/errorcode7/zig/tree/master/debian</p>
-</blockquote>
-<p>dpkg-buildpackage打包</p>
-<pre><code class="language-shell"># 因为有Cmake文件，直接构建即可
-rm -rf  .zig-cache/
-dpkg-buildpackage -uc -us -tc 
-</code></pre>
-<p>可能会提示gpg签名失败，不要紧，已经打包好了。</p>
-<pre><code class="language-shell">dpkg -c ../zig_*.deb
-</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../x11/x11.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
 
+                            <a rel="next prefetch" href="../linux/SPDX.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -1779,7 +1197,13 @@ dpkg-buildpackage -uc -us -tc
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../x11/x11.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
 
+                    <a rel="next prefetch" href="../linux/SPDX.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
             </nav>
 
         </div>
@@ -1797,21 +1221,16 @@ dpkg-buildpackage -uc -us -tc
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-abc7f01d.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 
-        <script>
-        window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
-        });
-        </script>
 
 
     </div>
