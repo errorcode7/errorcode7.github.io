@@ -105,6 +105,7 @@
     color: #999;
     padding: 2px;">arm-vhe-kvm</div>
 </center>
+
 - 用户空间代码调用ioctl系统调用，触发内核kvm模块实现的函数调用，在内核的hypervisor发生上下文切换，也就是将host运行的指令保存，载入guest的指令(上下文)到CPU，在`__guest_enter`调用eret，进入guest的EL1级别继续执行PC寄存器的指令。（host el0 -> host el2 -> guest el1 ）
 
 - 当CPU执行到敏感指令的时候，触发异常，退出guest状态，陷入到L2级别hypervisor的中断向量，中断向量很快就跳转到` __guest_exit`，`__guest_exit` ret后，CPU回到hypervisor上下文，经过fixup_guest_exit简单的处理，如果成功，则仅需切回guest。
