@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>LVGL</title>
+        <title>nVHE</title>
 
 
         <!-- Custom HTML head -->
@@ -174,204 +174,485 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="lvgl"><a class="header" href="#lvgl">LVGL</a></h1>
-<p>在linux下使用lvgl编写gui程序，使用lv_port_linux编译出动态库，简化在linux的开发环境流程。</p>
-<h2 id="制作debian包"><a class="header" href="#制作debian包">制作Debian包</a></h2>
-<h3 id="1安装环境"><a class="header" href="#1安装环境">1.安装环境</a></h3>
-<pre><code class="language-shell">sudo apt update
-sudo apt install pkg-config
-sudo apt install libwayland-dev libxkbcommon-dev libwayland-bin wayland-protocols libdrm-dev
+                        <h1 id="nvhe的调用过程"><a class="header" href="#nvhe的调用过程">nVHE的调用过程</a></h1>
+<h2 id="nvhe调用路径"><a class="header" href="#nvhe调用路径">nVHE调用路径</a></h2>
+<p>nvhe的完整路径，host el1 -&gt; hyp el2 -&gt;host el1的过程。</p>
+<pre><code>[主机调用]: kvm_call_hyp_ret(__kvm_vcpu_run, vcpu) 
+     ↓
+[展开为]: arm_smccc_1_1_hvc(KVM_HOST_SMCCC_FUNC(__kvm_vcpu_run), vcpu, &amp;res)
+     ↓
+[执行]: hvc #0 (x0=KVM功能号, x1=vcpu)
+     ↓
+[异常处理]: host_el1_sync_vect → __host_hvc → __host_exit
+     ↓
+[调用处理]: handle_trap → handle_host_hcall → host_hcall[KVM_FUNC_IDX] → handle___kvm_vcpu_run → __kvm_vcpu_run(vcpu)
+     ↓
+[返回]: __host_exit(vcpu) -&gt;eret
+     ↓
+[返回]: kvm_call_hyp_ret
 </code></pre>
-<h3 id="2修改lv_port_linux的一些默认配置"><a class="header" href="#2修改lv_port_linux的一些默认配置">2.修改lv_port_linux的一些默认配置</a></h3>
-<p>CMakeLists.txt,，方便编译动态库。</p>
-<pre><code class="language-shell"> # Link LVGL with external dependencies - Modern CMake/CMP0079 allows this
--target_link_libraries(lvgl PUBLIC ${PKG_CONFIG_LIB} m pthread)
-+target_link_libraries(lvgl PUBLIC ${PKG_CONFIG_LIB} m pthread rt)
+<p>__kvm_vcpu_run内恢复host el1的 pc 寄存器，<code>__host_exit</code>最后ret，后续会讲到。</p>
+<p>kvm_call_hyp_ret展开</p>
+<pre><code class="language-c">{
+     struct arm_smccc_res res;
+     
+     // KVM_HOST_SMCCC_FUNC(__kvm_vcpu_run) 展开为 (ARM_SMCCC_OWNER_KVM &lt;&lt; ARM_SMCCC_OWNER_SHIFT) |      __KVM_HOST_SMCCC_FUNC___kvm_vcpu_run
+     // 假设 __KVM_HOST_SMCCC_FUNC___kvm_vcpu_run = 19
+     typeof(vcpu) __a1 = vcpu;                           // arg1 = vcpu
+     struct arm_smccc_res *___res = &amp;res;                // ___res = &amp;res
+     register unsigned long arg0 asm("r0") = (u32)((ARM_SMCCC_OWNER_KVM &lt;&lt; ARM_SMCCC_OWNER_SHIFT) | 19); // arg0=function ID
+     register typeof(vcpu) arg1 asm("r1") = __a1;        // arg1=vcpu
+     
+     // 汇编部分
+     register unsigned long r0 asm("r0");      // 用于接收返回值
+     register unsigned long r1 asm("r1");      // 用于接收返回值
+     register unsigned long r2 asm("r2");      // 用于接收返回值
+     register unsigned long r3 asm("r3");      // 用于接收返回值
+     
+     asm volatile("hvc     #0\n :                // SMCCC_HVC_INST = "hvc  #0"
+                  "=r" (r0), "=r" (r1), "=r" (r2), "=r" (r3)
+                  : "r" (arg0), "r" (arg1)    // function ID and vcpu
+                  : "memory");
+     
+     if (___res) {
+         *___res = (typeof(*___res)){r0, r1, r2, r3};   // 将返回值存入res结构体
+     }
+     
+     WARN_ON(res.a0 != SMCCC_RET_SUCCESS);    // 检查返回状态
+     
+     ret = res.a1;  // 返回函数执行结果
+ }
 </code></pre>
-<p>编译开关</p>
-<p>LV_USE_PRIVATE_API，打包dev开发包的时候，私有头文件也要包含，否则会找不到头文件。</p>
-<p>LV_USE_WAYLAND，启用wayland后端</p>
-<p>LV_WAYLAND_WINDOW_DECORATIONS，开启这个，可以使得wayland窗口管理器管理app，否则app无法拖动。</p>
-<p>LV_USE_LINUX_DRM，使用DRM后端</p>
-<pre><code class="language-shell"> /** Include `lvgl_private.h` in `lvgl.h` to access internal data and functions by default */
- #ifndef LV_USE_PRIVATE_API
--    #define LV_USE_PRIVATE_API  0
-+    #define LV_USE_PRIVATE_API  1
- #endif
-
- 
- /** Use Wayland to open a window and handle input on Linux or BSD desktops */
--#define LV_USE_WAYLAND          0
-+#define LV_USE_WAYLAND          1
- #if LV_USE_WAYLAND
-
-/**&lt; When LV_WAYLAND_USE_DMABUF is disabled, only LV_DISPLAY_RENDER_MODE_PARTIAL is supported*/
--    #define LV_WAYLAND_WINDOW_DECORATIONS   0    /**&lt; Draw client side window decorations only necessary on Mutter/GNOME. Not supported using DMABUF*/
-+    #define LV_WAYLAND_WINDOW_DECORATIONS   1    /**&lt; Draw client side window decorations only necessary on Mutter/GNOME. Not supported using DMABUF*/
-     #define LV_WAYLAND_WL_SHELL             0    /**&lt; Use the legacy wl_shell protocol instead of the default XDG shell*/
- #endif
-
- /** Driver for /dev/dri/card */
--#define LV_USE_LINUX_DRM        0
-+#define LV_USE_LINUX_DRM        1
- 
- #if LV_USE_LINUX_DRM
+<h2 id="hyp异常向量表映射"><a class="header" href="#hyp异常向量表映射">hyp异常向量表映射</a></h2>
+<p>__kvm_hyp_host_vector的结构是这样的（每个异常类型对应一个64字节的槽）：</p>
+<pre><code>__kvm_hyp_host_vector:  // 基地址 (VBAR_EL2)
+├─ [0x000] Synchronous EL2t     → invalid_host_el2_vect
+├─ [0x080] IRQ EL2t             → invalid_host_el2_vect  
+├─ [0x100] FIQ EL2t             → invalid_host_el2_vect
+├─ [0x180] Error EL2t           → invalid_host_el2_vect
+├─ [0x200] Synchronous EL2h     → invalid_host_el2_vect
+├─ [0x280] IRQ EL2h             → invalid_host_el2_vect
+├─ [0x300] FIQ EL2h             → invalid_host_el2_vect
+├─ [0x380] Error EL2h           → invalid_host_el2_vect
+├─ [0x400] Synchronous 64-bit EL1/EL0 → host_el1_sync_vect
+├─ [0x480] IRQ 64-bit EL1/EL0   → invalid_host_el1_vect
+├─ [0x500] FIQ 64-bit EL1/EL0   → invalid_host_el1_vect
+├─ [0x580] Error 64-bit EL1/EL0 → invalid_host_el1_vect
+├─ [0x600] Synchronous 32-bit EL1/EL0 → host_el1_sync_vect
+├─ [0x680] IRQ 32-bit EL1/EL0   → invalid_host_el1_vect
+├─ [0x700] FIQ 32-bit EL1/EL0   → invalid_host_el1_vect
+├─ [0x780] Error 32-bit EL1/EL0 → invalid_host_el1_vect
 </code></pre>
-<p>3.创建Debian构建文件</p>
-<pre><code class="language-shell">cd lv_port_linux &amp;&amp; mkdir -p debian &amp;&amp; cd debian
+<p>中断向量执行流程</p>
+<pre><code class="language-asm">EL1执行: hvc #0 (功能号在x0中)
+↓
+ARM处理器检测到HVC #0异常
+↓
+根据ESR_EL2确定异常来源为EL1/EL0
+↓
+查找向量表: VBAR_EL2 + 0x400 (Synchronous 64-bit EL1/EL0的偏移)
+↓
+跳转到: host_el1_sync_vect (定义在host.S中)
+↓
+host_el1_sync_vect宏执行:
+         stp x0, x1, [sp, #-16]!    // 保存x0, x1到栈
+         mrs x0, esr_el2            // 读取ESR
+         ubfx x0, x0, #ESR_ELx_EC_SHIFT, #ESR_ELx_EC_WIDTH  // 提取异常类
+         cmp x0, #ESR_ELx_EC_HVC64  // 检查是否为HVC64异常类
+         b.eq __host_hvc            // 如果是HVC64，跳转到__host_hvc
+         b __host_exit              // 否则，跳转到__host_exit
+↓
+执行: __host_hvc (在host.S中)
 </code></pre>
-<p>添加control文件</p>
-<pre><code class="language-shell">Source: lvgl
-Section: libs
-Priority: optional
-Maintainer: LVGL Maintainer &lt;maintainer@example.com&gt;
-Build-Depends: debhelper-compat (= 13), cmake, pkg-config, libwayland-dev, wayland-protocols, libxkbcommon-dev, libdrm-dev
-Standards-Version: 4.6.2
-Homepage: https://lvgl.io
+<p>host_el1_sync_vect中断向量的核心是判断是否为HVC64异常。x0是功能号，x1是参数，如vpcu指针。</p>
+<p>压栈是为了传递给__host_hvc。</p>
+<h2 id="异常处理分发"><a class="header" href="#异常处理分发">异常处理分发</a></h2>
+<p><code>__host_hvc</code>根据x0记录的kvm功能号是判断是hvc还是其他调用，x0=<code>__KVM_HOST_SMCCC_FUNC___kvm_vcpu_run</code>。</p>
+<pre><code class="language-asm">SYM_FUNC_START(__host_hvc)
+	ldp	x0, x1, [sp]		// Don't fixup the stack yet
 
-Package: liblvgl9
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: LittlevGL runtime library
- LVGL graphics library runtime shared objects.
+	/* No stub for you, sonny Jim */
+alternative_if ARM64_KVM_PROTECTED_MODE//KVM_保护模式直接退出
+	b	__host_exit
+alternative_else_nop_endif
 
-Package: liblvgl-dev
-Architecture: any
-Depends: liblvgl9 (= ${binary:Version}), ${misc:Depends}
-Description: LittlevGL development files (headers, pkg-config)
- Development headers, shared libs and pkg-config for LVGL.
+	/* Check for a stub HVC call */
+	cmp	x0, #HVC_STUB_HCALL_NR //成立
+	b.hs	__host_exit //普通kvm hvc调用。
+
+	add	sp, sp, #16
+	/*
+	 * Compute the idmap address of __kvm_handle_stub_hvc and
+	 * jump there.
+	 *
+	 * Preserve x0-x4, which may contain stub parameters.
+	 */
+	adr_l	x5, __kvm_handle_stub_hvc
+	hyp_pa	x5, x6
+	br	x5
+SYM_FUNC_END(__host_hvc)
 </code></pre>
-<p>添加rules</p>
-<pre><code class="language-shell">#!/usr/bin/make -f
-export DH_VERBOSE=1
+<p>__host_exit的核心功能就是保存host上下文，从perCPU变量获取指针到x0寄存器，将当前的各种寄存器存这个上下文。在进入异常和中断向量之前，这些寄存器属于el1 host在用，而中断向量中间也只是少量的使用寄存器，且做到了用后恢复。</p>
+<p>到然后进入handle_trap，执行具体的hvc功能函数调用，需要host的上下文作为参数提供功能号。</p>
+<p>handle_trap</p>
+<h2 id="保存host上下文进入到hyp上下文"><a class="header" href="#保存host上下文进入到hyp上下文">保存host上下文，进入到hyp上下文</a></h2>
+<p><code>__host_exit</code>先保存host上下文，handle_trap执行hyp功能号对应的函数，返回后，继续执行到eret返回host el1。</p>
+<pre><code class="language-asm">SYM_FUNC_START(__host_exit)
+	get_host_ctxt	x0, x1
 
-%:
-	dh $@ --buildsystem=cmake
+	/* Store the host regs x2 and x3 */
+	stp	x2, x3,   [x0, #CPU_XREG_OFFSET(2)]
 
-#编译动态库
-override_dh_auto_configure:
-	# 可选：若需从 lv_conf.defaults 生成 lv_conf.h
-	# python3 lvgl/scripts/generate_lv_conf.py .
-	bash ./scripts/gen_wl_protocols.sh ./protocols
-	# 解决 Wayland 协议生成代码中符号可见性为 hidden 导致 DSO 链接失败
-	sed -i 's/^#define WL_PRIVATE __attribute__ ((visibility("hidden")))/#define WL_PRIVATE/' ./protocols/wayland_xdg_shell.c || true
-	dh_auto_configure --builddirectory=build -- \
-	  -DCMAKE_INSTALL_PREFIX=/usr \
-	  -DBUILD_SHARED_LIBS=ON \
-	  -DLIB_INSTALL_DIR=lib/${DEB_HOST_MULTIARCH} \
-	  -DCMAKE_C_FLAGS='-DWL_PRIVATE=' \
-	  -DCMAKE_EXE_LINKER_FLAGS='-Wl,--export-dynamic' \
-	  -DLV_BUILD_EXAMPLES=ON \
-	  -DLV_BUILD_DEMOS=ON
+	/* Retrieve the host regs x0-x1 from the stack */
+	ldp	x2, x3, [sp], #16	// x0, x1
 
-override_dh_auto_build:
-	# Wayland scanner generates hidden symbols; neutralize before linking
-	sed -i 's/^#define WL_PRIVATE __attribute__ ((visibility("hidden")))/#define WL_PRIVATE/' build/protocols/wayland_xdg_shell.c || true
-	dh_auto_build --builddirectory=build -- -j$(nproc)
+	/* Store the host regs x0-x1 and x4-x17 */
+	stp	x2, x3,   [x0, #CPU_XREG_OFFSET(0)]
+	stp	x4, x5,   [x0, #CPU_XREG_OFFSET(4)]
+	stp	x6, x7,   [x0, #CPU_XREG_OFFSET(6)]
+	stp	x8, x9,   [x0, #CPU_XREG_OFFSET(8)]
+	stp	x10, x11, [x0, #CPU_XREG_OFFSET(10)]
+	stp	x12, x13, [x0, #CPU_XREG_OFFSET(12)]
+	stp	x14, x15, [x0, #CPU_XREG_OFFSET(14)]
+	stp	x16, x17, [x0, #CPU_XREG_OFFSET(16)]
 
-override_dh_auto_install:
-	dh_auto_install --builddirectory=build --destdir=$(CURDIR)/debian/tmp
-	# 等同于：DESTDIR=$(CURDIR)/debian/tmp cmake --install build
+	/* Store the host regs x18-x29, lr */
+	save_callee_saved_regs x0
 
-override_dh_auto_clean:
-	# 保持与 out-of-source 一致的清理
-	dh_auto_clean --builddirectory=build || true
+	/* Save the host context pointer in x29 across the function call */
+	mov	x29, x0
 
-override_dh_auto_test:
+#ifdef CONFIG_ARM64_PTR_AUTH_KERNEL
+alternative_if_not ARM64_HAS_ADDRESS_AUTH
+b __skip_pauth_save
+alternative_else_nop_endif
+
+alternative_if ARM64_KVM_PROTECTED_MODE
+	/* Save kernel ptrauth keys. */
+	add x18, x29, #CPU_APIAKEYLO_EL1
+	ptrauth_save_state x18, x19, x20
+
+	/* Use hyp keys. */
+	adr_this_cpu x18, kvm_hyp_ctxt, x19
+	add x18, x18, #CPU_APIAKEYLO_EL1
+	ptrauth_restore_state x18, x19, x20
+	isb
+alternative_else_nop_endif
+__skip_pauth_save:
+#endif /* CONFIG_ARM64_PTR_AUTH_KERNEL */
+
+	bl	handle_trap
+
+__host_enter_restore_full:
+	/* Restore kernel keys. */
+#ifdef CONFIG_ARM64_PTR_AUTH_KERNEL
+alternative_if_not ARM64_HAS_ADDRESS_AUTH
+b __skip_pauth_restore
+alternative_else_nop_endif
+
+alternative_if ARM64_KVM_PROTECTED_MODE
+	add x18, x29, #CPU_APIAKEYLO_EL1
+	ptrauth_restore_state x18, x19, x20
+alternative_else_nop_endif
+__skip_pauth_restore:
+#endif /* CONFIG_ARM64_PTR_AUTH_KERNEL */
+
+	/* Restore host regs x0-x17 */
+	ldp	x0, x1,   [x29, #CPU_XREG_OFFSET(0)]
+	ldp	x2, x3,   [x29, #CPU_XREG_OFFSET(2)]
+	ldp	x4, x5,   [x29, #CPU_XREG_OFFSET(4)]
+	ldp	x6, x7,   [x29, #CPU_XREG_OFFSET(6)]
+
+	/* x0-7 are use for panic arguments */
+__host_enter_for_panic:
+	ldp	x8, x9,   [x29, #CPU_XREG_OFFSET(8)]
+	ldp	x10, x11, [x29, #CPU_XREG_OFFSET(10)]
+	ldp	x12, x13, [x29, #CPU_XREG_OFFSET(12)]
+	ldp	x14, x15, [x29, #CPU_XREG_OFFSET(14)]
+	ldp	x16, x17, [x29, #CPU_XREG_OFFSET(16)]
+
+	/* Restore host regs x18-x29, lr */
+	restore_callee_saved_regs x29
+
+	/* Do not touch any register after this! */
+__host_enter_without_restoring:
+	eret  //使用eret指令返回到主机
+	sb
+SYM_FUNC_END(__host_exit)
+
 </code></pre>
-<p>添加install文件</p>
-<p>liblvgl9.install</p>
-<pre><code>usr/lib/*/liblvgl.so.*
-usr/lib/*/liblvgl_demos.so.*
-usr/lib/*/liblvgl_examples.so.*
-usr/lib/*/liblvgl_thorvg.so.*
-</code></pre>
-<p>liblvgl-dev.install</p>
-<pre><code class="language-shell">usr/include/lvgl/
-usr/share/pkgconfig/lvgl.pc
-usr/lib/*/liblvgl.so
-usr/lib/*/liblvgl_demos.so
-usr/lib/*/liblvgl_examples.so
-usr/lib/*/liblvgl_thorvg.so
-usr/lib/liblvgl_linux.a
-</code></pre>
-<h4 id="liblvgl_linuxa为什么不改成动态库"><a class="header" href="#liblvgl_linuxa为什么不改成动态库">liblvgl_linux.a为什么不改成动态库？</a></h4>
-<ul>
-<li>
-<p>目标在 CMake 中被明确声明为 STATIC：项目把平台封装/后端适配层做成了内部静态库（add_library(lvgl_linux STATIC …)），默认不会随 -DBUILD_SHARED_LIBS=ON 变成动态库。要修改，则会大量的地方修改适配。</p>
-</li>
-<li>
-<p>仅供内部链接、非稳定 ABI：lvgl_linux 属于本仓库的“Linux 适配层”，主要被可执行程序或 liblvgl.so 内部使用，没承诺对外 ABI 稳定，不适合作为独立 .so 提供。</p>
-</li>
-<li>
-<p>Wayland 生成代码的符号可见性问题：wayland-scanner 生成的 wayland_xdg_shell.c 使用 WL_PRIVATE 把接口标记为隐藏，直接做成 .so 会出现“hidden symbol is referenced by DSO”的链接问题，需要额外处理（我们在打包时通过 -DWL_PRIVATE= 和 –export-dynamic 才解决）。</p>
-</li>
-<li>
-<p>避免循环依赖与依赖膨胀：如果把 lvgl_linux 做成共享库，很容易与 liblvgl.so、liblvgl_examples.so、liblvgl_demos.so 形成相互引用，导致复杂的运行时依赖和 shlibdeps 噪音。当前方案是把对外 .so 限定在核心和演示库，其它平台层静态链接使用。</p>
-</li>
-</ul>
-<h4 id="liblvglso-和-liblvgl_linuxa-的区别"><a class="header" href="#liblvglso-和-liblvgl_linuxa-的区别">liblvgl.so 和 liblvgl_linux.a 的区别?</a></h4>
-<h5 id="liblvglso--lvgl-核心库"><a class="header" href="#liblvglso--lvgl-核心库">liblvgl.so- LVGL 核心库</a></h5>
-<p>主要功能：</p>
-<ul>
-<li>LVGL 核心功能：包含所有 LVGL 的核心 API 和功能</li>
-<li>对象系统：lv_obj_* 系列函数，如 lv_obj_create, lv_obj_add_flag 等</li>
-<li>绘图系统：lv_draw_* 系列函数，如 lv_draw_triangle, lv_draw_triangle_dsc_init 等</li>
-<li>字体系统：lv_font_* 系列函数和字体数据，如 lv_font_montserrat_24 等</li>
-<li>显示驱动接口：lv_linux_drm_create, lv_wayland_window_create 等 Linux 特定驱动函数</li>
-<li>输入设备接口：lv_indev_* 系列函数</li>
-<li>组管理：lv_group_* 系列函数</li>
-</ul>
-<h5 id="liblvgl_linuxa---linux-平台特定库"><a class="header" href="#liblvgl_linuxa---linux-平台特定库">liblvgl_linux.a - Linux 平台特定库</a></h5>
-<p>主要功能：</p>
-<ul>
-<li>驱动后端管理：driver_backends_* 系列函数</li>
-<li>后端初始化：backend_init_* 系列函数</li>
-<li>Wayland 协议接口：包含 Wayland XDG 协议的接口定义</li>
-<li>平台特定实现：Linux 特定的驱动初始化和运行循环</li>
-</ul>
-<h3 id="3构建deb包"><a class="header" href="#3构建deb包">3.构建deb包</a></h3>
-<pre><code class="language-shell">cd lv_port_linux/
-sudo apt build-dep .
-dpkg-buildpackage -us -uc -tc  -b
-</code></pre>
-<p>生成三个包：</p>
-<p>liblvgl9_9.3.0-1_amd64.deb，带动态库。</p>
-<p>liblvgl-dev_9.3.0-1_amd64.deb，带头文件和liblvgl_linux.a，里面的动态库链接到liblvgl9的动态库。</p>
-<p>liblvgl9-dbgsym_9.3.0-1_amd64.deb，带动态库调试符号。</p>
-<p>理论上来说，开发接口是固定的，因此liblvgl-dev名字中是不带版本9，而提供的动态库liblvgl9则需要带版本9，最新liblvgl-dev通过对liblvgl9的依赖，保证liblvgl-dev可以使用新的库。</p>
-<h3 id="4编译测试"><a class="header" href="#4编译测试">4.编译测试</a></h3>
-<p>先安装开发环境</p>
-<pre><code class="language-shell">sudo dpkg -i ../liblvgl9_9.3.0-1_amd64.deb  ../liblvgl-dev_9.3.0-1_amd64.deb
-</code></pre>
-<p>进入example编译例子</p>
-<pre><code class="language-shell">cd lv_port_linux/example/
-cmake -B build -S .
-make -C build -j
-#运行例子
-./bin/main
-</code></pre>
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="pic/lvgl.gif">
-    <br>
-    
-<div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">example例子</div>
+<p>在handle_trap里进入到handle_host_hcall分支。</p>
+<pre><code class="language-c">arch/arm64/kvm/hyp/nvhe/hyp-main.c
+void handle_trap(struct kvm_cpu_context *host_ctxt)
+{
+	u64 esr = read_sysreg_el2(SYS_ESR);
 
-</center>
+	switch (ESR_ELx_EC(esr)) {
+	case ESR_ELx_EC_HVC64:
+		handle_host_hcall(host_ctxt);
+		break;
+	case ESR_ELx_EC_SMC64:
+		handle_host_smc(host_ctxt);
+		break;
+	case ESR_ELx_EC_IABT_LOW:
+	case ESR_ELx_EC_DABT_LOW:
+		handle_host_mem_abort(host_ctxt);
+		break;
+	default:
+		BUG();
+	}
+}
+
+</code></pre>
+<p>从host_ctxt取,HVC功能号,然后找到对应的调用函数。</p>
+<pre><code class="language-c">
+#define cpu_reg(ctxt, r)	(ctxt)-&gt;regs.regs[r]
+#define DECLARE_REG(type, name, ctxt, reg)					\
+				__always_unused int ___check_reg_ ## reg;	\
+				type name = (type)cpu_reg(ctxt, (reg))
+
+
+static void handle_host_hcall(struct kvm_cpu_context *host_ctxt)
+{
+   // 从host_ctxt的x0寄存器获取功能号放到id
+   // cpu_reg(host_ctxt, 0) 本质上是从host_ctxt-&gt;regs.regs[0]获取值
+   // 这个值就是HVC调用时x0寄存器中的功能号
+
+	DECLARE_REG(unsigned long, id, host_ctxt, 0);
+	unsigned long hcall_min = 0;
+	hcall_t hfn;
+
+	/*
+	 * If pKVM has been initialised then reject any calls to the
+	 * early "privileged" hypercalls. Note that we cannot reject
+	 * calls to __pkvm_prot_finalize for two reasons: (1) The static
+	 * key used to determine initialisation must be toggled prior to
+	 * finalisation and (2) finalisation is performed on a per-CPU
+	 * basis. This is all fine, however, since __pkvm_prot_finalize
+	 * returns -EPERM after the first call for a given CPU.
+	 */
+	if (static_branch_unlikely(&amp;kvm_protected_mode_initialized))
+		hcall_min = __KVM_HOST_SMCCC_FUNC___pkvm_prot_finalize;
+
+	id &amp;= ~ARM_SMCCC_CALL_HINTS;
+	id -= KVM_HOST_SMCCC_ID(0);
+
+	if (unlikely(id &lt; hcall_min || id &gt;= ARRAY_SIZE(host_hcall)))
+		goto inval;
+
+	hfn = host_hcall[id];//先索引到函数
+	if (unlikely(!hfn))
+		goto inval;
+
+	cpu_reg(host_ctxt, 0) = SMCCC_RET_SUCCESS;
+	hfn(host_ctxt);//在跳转到函数
+
+	return;
+inval:
+	cpu_reg(host_ctxt, 0) = SMCCC_RET_NOT_SUPPORTED;
+}
+</code></pre>
+<p>对应的函数是<code>__kvm_vcpu_run</code>，展开是<code>handle___kvm_vcpu_run</code>,host_hcall数组存储函数指针，索引值<code>__KVM_HOST_SMCCC_FUNC_##x</code>拼接的调用号。</p>
+<p>最终在<code>handle___kvm_vcpu_run</code>内调用<code>__kvm_vcpu_run</code>。</p>
+<pre><code class="language-c">#define HANDLE_FUNC(x)	[__KVM_HOST_SMCCC_FUNC_##x] = (hcall_t)handle_##x
+
+static const hcall_t host_hcall[] = {
+	/* ___kvm_hyp_init */
+	HANDLE_FUNC(__pkvm_init),
+	HANDLE_FUNC(__pkvm_create_private_mapping),
+	HANDLE_FUNC(__pkvm_cpu_set_vector),
+	HANDLE_FUNC(__kvm_enable_ssbs),
+	HANDLE_FUNC(__vgic_v3_init_lrs),
+	HANDLE_FUNC(__vgic_v3_get_gic_config),
+	HANDLE_FUNC(__pkvm_prot_finalize),
+
+	HANDLE_FUNC(__pkvm_host_share_hyp),
+	HANDLE_FUNC(__pkvm_host_unshare_hyp),
+	HANDLE_FUNC(__pkvm_host_share_guest),
+	HANDLE_FUNC(__pkvm_host_unshare_guest),
+	HANDLE_FUNC(__pkvm_host_relax_perms_guest),
+	HANDLE_FUNC(__pkvm_host_wrprotect_guest),
+	HANDLE_FUNC(__pkvm_host_test_clear_young_guest),
+	HANDLE_FUNC(__pkvm_host_mkyoung_guest),
+	HANDLE_FUNC(__kvm_adjust_pc),
+	HANDLE_FUNC(__kvm_vcpu_run),
+	HANDLE_FUNC(__kvm_flush_vm_context),
+	HANDLE_FUNC(__kvm_tlb_flush_vmid_ipa),
+	HANDLE_FUNC(__kvm_tlb_flush_vmid_ipa_nsh),
+	HANDLE_FUNC(__kvm_tlb_flush_vmid),
+	HANDLE_FUNC(__kvm_tlb_flush_vmid_range),
+	HANDLE_FUNC(__kvm_flush_cpu_context),
+	HANDLE_FUNC(__kvm_timer_set_cntvoff),
+	HANDLE_FUNC(__vgic_v3_save_vmcr_aprs),
+	HANDLE_FUNC(__vgic_v3_restore_vmcr_aprs),
+	HANDLE_FUNC(__pkvm_reserve_vm),
+	HANDLE_FUNC(__pkvm_unreserve_vm),
+	HANDLE_FUNC(__pkvm_init_vm),
+	HANDLE_FUNC(__pkvm_init_vcpu),
+	HANDLE_FUNC(__pkvm_teardown_vm),
+	HANDLE_FUNC(__pkvm_vcpu_load),
+	HANDLE_FUNC(__pkvm_vcpu_put),
+	HANDLE_FUNC(__pkvm_tlb_flush_vmid),
+};
+
+static void handle___kvm_vcpu_run(struct kvm_cpu_context *host_ctxt)
+{
+	DECLARE_REG(struct kvm_vcpu *, host_vcpu, host_ctxt, 1);
+	int ret;
+
+	if (unlikely(is_protected_kvm_enabled())) {
+		struct pkvm_hyp_vcpu *hyp_vcpu = pkvm_get_loaded_hyp_vcpu();
+
+		/*
+		 * KVM (and pKVM) doesn't support SME guests for now, and
+		 * ensures that SME features aren't enabled in pstate when
+		 * loading a vcpu. Therefore, if SME features enabled the host
+		 * is misbehaving.
+		 */
+		if (unlikely(system_supports_sme() &amp;&amp; read_sysreg_s(SYS_SVCR))) {
+			ret = -EINVAL;
+			goto out;
+		}
+
+		if (!hyp_vcpu) {
+			ret = -EINVAL;
+			goto out;
+		}
+
+		flush_hyp_vcpu(hyp_vcpu);
+
+		ret = __kvm_vcpu_run(&amp;hyp_vcpu-&gt;vcpu);
+
+		sync_hyp_vcpu(hyp_vcpu);
+	} else {
+		struct kvm_vcpu *vcpu = kern_hyp_va(host_vcpu);
+
+		/* The host is fully trusted, run its vCPU directly. */
+		fpsimd_lazy_switch_to_guest(vcpu);
+		ret = __kvm_vcpu_run(vcpu);
+		fpsimd_lazy_switch_to_host(vcpu);
+	}
+out:
+	cpu_reg(host_ctxt, 1) =  ret;
+}
+</code></pre>
+<p><code>__kvm_vcpu_run</code>上下文切换前的准备，如果要切换到guest，则__sysreg_restore_state_nvhe(guest_ctxt);将guest的pc寄存器写elr寄存器，方便<code>__enter_guest</code> eret进入到guest代码执行。</p>
+<p>当guest陷入异常后，<code>__enter_exit</code>只是ret返回当前代码仍然在el2级别，只有在退出<code>__kvm_vcpu_run</code> 前，调用<code>__sysreg_restore_state_nvhe(host_ctxt)</code>，将host 的pc寄存器写入到elr寄存，方便后续返回到host el1状态，这一点是nvhe独有的。</p>
+<p>当<code>__kvm_vcpu_run</code>层层返回，直到<code>__host_exit</code>里的<code>handle_trap</code>返回，继续执行到eret,最终从__host_exit返回到host el1，页就是<code>kvm_call_hyp_ret</code>展开后hvc调用后的那个指令，宏观上可以认为是kvm_call_hyp_ret返回后，从el2回到host el1。</p>
+<h2 id="在hyp里切换host和guest状态"><a class="header" href="#在hyp里切换host和guest状态">在hyp里切换host和guest状态</a></h2>
+<pre><code class="language-c">/* Switch to the guest for legacy non-VHE systems */
+int __kvm_vcpu_run(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpu_context *host_ctxt;
+	struct kvm_cpu_context *guest_ctxt;
+	struct kvm_s2_mmu *mmu;
+	bool pmu_switch_needed;
+	u64 exit_code;
+
+	host_ctxt = host_data_ptr(host_ctxt);
+	host_ctxt-&gt;__hyp_running_vcpu = vcpu;
+	guest_ctxt = &amp;vcpu-&gt;arch.ctxt;
+
+	__sysreg_save_state_nvhe(host_ctxt);
+
+
+	/*
+	 * We must restore the 32-bit state before the sysregs, thanks
+	 * to erratum #852523 (Cortex-A57) or #853709 (Cortex-A72).
+	 *
+	 * Also, and in order to be able to deal with erratum #1319537 (A57)
+	 * and #1319367 (A72), we must ensure that all VM-related sysreg are
+	 * restored before we enable S2 translation.
+	 */
+	__sysreg32_restore_state(vcpu);
+	__sysreg_restore_state_nvhe(guest_ctxt);
+
+	mmu = kern_hyp_va(vcpu-&gt;arch.hw_mmu);
+	__load_stage2(mmu, kern_hyp_va(mmu-&gt;arch));
+	__activate_traps(vcpu);
+
+	do {
+		/* Jump in the fire! */
+		exit_code = __guest_enter(vcpu);
+
+		/* And we're baaack! */
+	} while (fixup_guest_exit(vcpu, &amp;exit_code));
+
+	__sysreg_save_state_nvhe(guest_ctxt);
+
+	/*
+	 * Same thing as before the guest run: we're about to switch
+	 * the MMU context, so let's make sure we don't have any
+	 * ongoing EL1&amp;0 translations.
+	 */
+
+	__deactivate_traps(vcpu);
+	__load_host_stage2();
+
+	__sysreg_restore_state_nvhe(host_ctxt);
+
+	return exit_code;
+}
+</code></pre>
+<h2 id="在hyp返回前恢复elr"><a class="header" href="#在hyp返回前恢复elr">在hyp返回前恢复ELR</a></h2>
+<p><code>__sysreg_restore_state_nvhe</code>将ctxt里记录的PC寄存器写入ELR寄存，将pstate写入SPSR寄存器，eret就回到了host el1。</p>
+<pre><code class="language-c">void __sysreg_restore_state_nvhe(struct kvm_cpu_context *ctxt)
+{
+	u64 midr = ctxt_midr_el1(ctxt);
+
+	__sysreg_restore_el1_state(ctxt, midr, ctxt_sys_reg(ctxt, MPIDR_EL1));
+	__sysreg_restore_common_state(ctxt);
+	__sysreg_restore_user_state(ctxt);
+	__sysreg_restore_el2_return_state(ctxt);
+}
+
+
+static inline void __sysreg_restore_el2_return_state(struct kvm_cpu_context *ctxt)
+{
+	u64 pstate = to_hw_pstate(ctxt);
+	u64 mode = pstate &amp; PSR_AA32_MODE_MASK;
+	u64 vdisr;
+
+	/*
+	 * Safety check to ensure we're setting the CPU up to enter the guest
+	 * in a less privileged mode.
+	 *
+	 * If we are attempting a return to EL2 or higher in AArch64 state,
+	 * program SPSR_EL2 with M=EL2h and the IL bit set which ensures that
+	 * we'll take an illegal exception state exception immediately after
+	 * the ERET to the guest.  Attempts to return to AArch32 Hyp will
+	 * result in an illegal exception return because EL2's execution state
+	 * is determined by SCR_EL3.RW.
+	 */
+	if (!(mode &amp; PSR_MODE32_BIT) &amp;&amp; mode &gt;= PSR_MODE_EL2t)
+		pstate = PSR_MODE_EL2h | PSR_IL_BIT;
+
+	write_sysreg_el2(ctxt-&gt;regs.pc,			SYS_ELR);
+	write_sysreg_el2(pstate,			SYS_SPSR);
+
+	if (!cpus_have_final_cap(ARM64_HAS_RAS_EXTN))
+		return;
+
+	if (!vserror_state_is_nested(ctxt_to_vcpu(ctxt)))
+		vdisr = ctxt_sys_reg(ctxt, DISR_EL1);
+	else if (ctxt_has_ras(ctxt))
+		vdisr = ctxt_sys_reg(ctxt, VDISR_EL2);
+	else
+		vdisr = 0;
+
+	write_sysreg_s(vdisr, SYS_VDISR_EL2);
+}
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../linux/SPDX.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../kvm/ARM_KVM.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../linux/build_zig.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../linux/SPDX.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -381,11 +662,11 @@ make -C build -j
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../linux/SPDX.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../kvm/ARM_KVM.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../linux/build_zig.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../linux/SPDX.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
