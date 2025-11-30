@@ -105,11 +105,13 @@
     color: #999;
     padding: 2px;">arm-vhe-kvm</div>
 </center>
+- 用户空间代码调用ioctl系统调用，触发内核kvm模块实现的函数调用，在内核的hypervisor发生上下文切换，也就是将host运行的指令保存，载入guest的指令(上下文)到CPU，在`__guest_enter`调用eret，进入guest的EL1级别继续执行PC寄存器的指令。（host el0 -> host el2 -> guest el1 ）
+
+- 当CPU执行到敏感指令的时候，触发异常，退出guest状态，陷入到L2级别hypervisor的中断向量，中断向量很快就跳转到` __guest_exit`，`__guest_exit` ret后，CPU回到hypervisor上下文，经过fixup_guest_exit简单的处理，如果成功，则仅需切回guest。
+
+  如果失败，则需要继续回到host，在host内handle_exit处理捕获到的异常，当处理成功，则继续在切换到guest处理，当处理失败，则错误返回给用户空间处理，用户空间处理完成后继续调用ioctl进入内核，发生上下文切换，执行guest代码。
 
 
-
-
-用户空间代码调用ioctl系统调用，触发内核系统kvm对应的函数调用，在内核发生上下文切换，也就是将host运行的指令保存，载入guest的指令到CPU，继续执行PC寄存器的指令。当CPU执行到敏感指令的时候，触发异常，退出guest状态，切换到host上下文，在host内处理捕获到的异常，当处理成功，则继续在切换到guest处理，当处理失败，则错误返回给用户空间处理，用户空间处理完成后继续调用ioctl进入内核，发生上下文切换，执行guest代码。
 
 Q：什么是用户空间代码？作用是什么？
 
@@ -133,15 +135,32 @@ A：host是宿主机执行指令的状态，guest是虚拟机执行指令的状�
 
 Q：什么是敏感指令？
 
-A：敏感指令就是CPU虚拟化里定义的，需要特殊关注处理的指令，**不必刻意去区分是否拥有特权**，只需要知道他们特殊罢了。CPU有各种工作模式，当你不开启虚拟化，那么就不会关注敏感指令，当开启虚拟，并通过设置特定寄存器告诉CPU要关注某些敏感指令，一旦CPU处于guest状态，流水线上发现了敏感指令，则触发中断，在中断里模拟指令的实现。
+A：敏感指令就是CPU虚拟化里定义的，需要特殊关注处理的指令。arm则的所有敏感指令都是特权指令，因此只有el1的状态的guest才能陷入el2。x86的敏感指令既有特权指令也有非特权指令，**不必刻意去区分是否拥有特权**，只需要知道他们特殊罢了。
+
+CPU有各种工作模式，当你不开启虚拟化，那么就不会关注敏感指令，当开启虚拟，并通过设置特定寄存器告诉CPU要关注某些敏感指令，一旦CPU处于guest状态，流水线上发现了敏感指令，则触发中断，在中断里模拟指令的实现。
 
 你可以想象一下马里奥踩到特殊地砖，进入到地下执行任务，执行完了后再次回到地上的流程，去地下就是回到host，模拟执行特殊指令。进入到host状态，这个过程叫做VM-exit，进入到guest状态的过程叫做VM-entry。
 
 Q：CPU如何知道当前运行的是guest，需要去拦截敏感指令？
 
-A：CPU寄存器分为控制CPU工作模式的寄存器，状态寄存器，数据寄存器这几类。在CPU切换到guest代码之前，host代码会去操作控制寄存器，让CPU以另外一种工作模式运行，敏感指令就被监控，一旦触发就陷入异常，进入host模拟。
+A：CPU寄存器分为控制CPU工作模式的控制寄存器，状态寄存器，执行上下文寄存器这几类。在CPU切换到guest代码之前，host代码会去操作控制寄存器，让CPU以另外一种工作模式运行，敏感指令就被监控，一旦触发就陷入异常，回到host模拟。
 
 ## 关键函数
+
+**关键流程**
+
+```txt
+ioctl(vcpu_fd, KVM_RUN, NULL);//qemu
+  ↓
+kvm_vcpu_ioctl()
+    kvm_arch_vcpu_ioctl_run()
+        kvm_arm_vcpu_enter_exit()
+            kvm_call_hyp_ret(__kvm_vcpu_run, vcpu)
+            ├─ VHE模式: __kvm_vcpu_run_vhe() 
+            └─ 非VHE模式: __kvm_vcpu_run()
+                __guest_enter() (汇编实现)
+                   eret (异常返回指令)
+```
 
 ### 1.  用户空间代码
 
@@ -233,7 +252,7 @@ int main(void)
 
     /* 指定一个cpu运行，一个CPU对应一个kvm_run结构体 */
     while (1) {
-        ret = ioctl(vcpu_fd, KVM_RUN, NULL);
+        ret = ioctl(vcpu_fd, KVM_RUN, NULL);ioctl(vcpu_fd, KVM_RUN, NULL);
         assert(ret >= 0);
 
         switch(kvm_run->exit_reason) {
@@ -259,19 +278,6 @@ int main(void)
 
 ### 2. kvm驱动实现
 
-**关键流程**
-
-```c
-kvm_vcpu_ioctl()
-    kvm_arch_vcpu_ioctl_run()
-        kvm_arm_vcpu_enter_exit()
-            kvm_call_hyp_ret(__kvm_vcpu_run, vcpu)
-            ├─ VHE模式: __kvm_vcpu_run_vhe() 
-            └─ 非VHE模式: __kvm_vcpu_run()
-                __guest_enter() (汇编实现)
-                   eret (异常返回指令)
-```
-
 #### KVM_RUN系统调用入口
 
 ioctl(vcpu_fd, KVM_RUN, NULL)实际调用的对应在内核中的处理逻辑如下：
@@ -281,71 +287,12 @@ static long kvm_vcpu_ioctl(struct file *filp,
 			   unsigned int ioctl, unsigned long arg)
 {
 	struct kvm_vcpu *vcpu = filp->private_data;//从套接字对应的filp对象中获取vcpu对象。
-	void __user *argp = (void __user *)arg;
-	int r;
-	struct kvm_fpu *fpu = NULL;
-	struct kvm_sregs *kvm_sregs = NULL;
-
-	if (vcpu->kvm->mm != current->mm || vcpu->kvm->vm_dead)
-		return -EIO;
-
-	if (unlikely(_IOC_TYPE(ioctl) != KVMIO))
-		return -EINVAL;
-
-	/*
-	 * Wait for the vCPU to be online before handling the ioctl(), as KVM
-	 * assumes the vCPU is reachable via vcpu_array, i.e. may dereference
-	 * a NULL pointer if userspace invokes an ioctl() before KVM is ready.
-	 */
-	r = kvm_wait_for_vcpu_online(vcpu);
-	if (r)
-		return r;
-
-	/*
-	 * Some architectures have vcpu ioctls that are asynchronous to vcpu
-	 * execution; mutex_lock() would break them.
-	 */
-	r = kvm_arch_vcpu_async_ioctl(filp, ioctl, arg);
-	if (r != -ENOIOCTLCMD)
-		return r;
-
-	if (mutex_lock_killable(&vcpu->mutex))
-		return -EINTR;
+    ....
 	switch (ioctl) {
 	case KVM_RUN: {
-	case KVM_RUN: {
-		struct pid *oldpid;
-		r = -EINVAL;
-		if (arg)
-			goto out;
-
-		/*
-		 * Note, vcpu->pid is primarily protected by vcpu->mutex. The
-		 * dedicated r/w lock allows other tasks, e.g. other vCPUs, to
-		 * read vcpu->pid while this vCPU is in KVM_RUN, e.g. to yield
-		 * directly to this vCPU
-		 */
-		oldpid = vcpu->pid;
-		if (unlikely(oldpid != task_pid(current))) {
-			/* The thread running this VCPU changed. */
-			struct pid *newpid;
-			//第一次执行的时候，实现VCPU初始化，属于延迟初始化的优化
-			r = kvm_arch_vcpu_run_pid_change(vcpu);
-			if (r)
-				break;
-
-			newpid = get_task_pid(current, PIDTYPE_PID);
-			write_lock(&vcpu->pid_lock);
-			vcpu->pid = newpid;
-			write_unlock(&vcpu->pid_lock);
-
-			put_pid(oldpid);
-		}//更新vcpu记录当前的线程PID
-		vcpu->wants_to_run = !READ_ONCE(vcpu->run->immediate_exit__unsafe);
+        ....
 		r = kvm_arch_vcpu_ioctl_run(vcpu);//关键入口，返回整数r,错误原因
-		vcpu->wants_to_run = false;
-
-		trace_kvm_userspace_exit(vcpu->run->exit_reason, r);
+		....
 		break;
 	}
 ...
@@ -353,11 +300,63 @@ static long kvm_vcpu_ioctl(struct file *filp,
 
 ```
 
+在host处理异常，在kvm_arch_vcpu_ioctl_run内，都还属于host kernel的范围，kvm_arm_vcpu_enter_exit这是在准备进入到hypervisor。handle_exit处理异常，处理成功则继续循环，处理失败则返回，最终回到用户空间。
+
+```c
+int kvm_arch_vcpu_ioctl_run(struct kvm_vcpu *vcpu)
+{
+	struct kvm_run *run = vcpu->run;
+	int ret;
+
+	if (run->exit_reason == KVM_EXIT_MMIO) {
+		ret = kvm_handle_mmio_return(vcpu);
+		if (ret)
+			return ret;
+	}
+
+	vcpu_load(vcpu);
+
+	if (run->immediate_exit) {
+		ret = -EINTR;
+		goto out;
+	}
+
+	kvm_sigset_activate(vcpu);
+
+	ret = 1;
+	run->exit_reason = KVM_EXIT_UNKNOWN;
+	run->flags = 0;
+	while (ret > 0) {
+        ...
+		ret = kvm_arm_vcpu_enter_exit(vcpu);
+        ...
+		ret = handle_exit(vcpu, ret);
+	}
+    ...
+	return ret;
+}
+
+static int noinstr kvm_arm_vcpu_enter_exit(struct kvm_vcpu *vcpu)
+{
+	int ret;
+
+	guest_state_enter_irqoff();
+	ret = kvm_call_hyp_ret(__kvm_vcpu_run, vcpu);//封装
+	guest_state_exit_irqoff();
+
+	return ret;
+}
+```
+
+
+
 ####  VHE模式
 
-这里根据 has_vhe()判断是否启用了VHE，决定使用哪种调用。
+##### nVHE
 
-- 在非VHE模式模式中，kvm_call_hyp_ret() 宏走kvm_call_hyp_nvhe路径，调用arm_smccc_1_1_hvc，会触发一个 HVC 指令，把当前正在运行在内核中EL1状态的 CPU陷入 EL2，才能执行host和guest的上下文切换，进入到guest的。也就是说，在内核中的**kvm模块需要再次陷入**到更高的异常级别才能操作硬件资源。
+kvm_call_hyp_ret算是host和hypervisor的分界线，这里根据 has_vhe()判断是否启用了VHE，决定使用哪种调用。
+
+- 在非VHE模式模式中，**kvm_call_hyp_ret()** 宏走kvm_call_hyp_nvhe路径，调用**arm_smccc_1_1_hvc**，会触发一个 HVC 指令，把当前正在运行在内核中EL1状态的 CPU陷入 EL2，才能执行host和guest的上下文切换，进入到guest的。也就是说，在内核中的**kvm模块需要再次陷入**到更高的异常级别才能操作硬件资源。
 - VHE模式中，Linux 内核本身就在 EL2 运行，所以直接调用 f() 同样是在 EL2 中，不用陷入到EL2。
 
 ```c
@@ -405,17 +404,32 @@ static long kvm_vcpu_ioctl(struct file *filp,
 #define kvm_call_hyp_nvhe(f, ...) f(__VA_ARGS__)
 ```
 
+从这里可以看出nVHE模式， kvm_call_hyp_ret是el1到el2的标志。将hyp和host做了区分。
+
+```c
+kvm_arch_vcpu_ioctl_run()
+{
+    while (ret > 0) {
+        ...
+    	ret = kvm_arm_vcpu_enter_exit(vcpu);//这里进入,内部就是kvm_call_hyp_ret提权操作
+        ...
+    	ret = handle_exit(vcpu, ret);//host处理，处理不了就再返回
+    }
+}
+```
+
 在之前的arm规范中，严格区分了内核代码运行在EL1和hypervisor运行在EL2，也就是nVHE模式的kvm实现。
 
-- 当用户触发kvm系统调用的时候，要先触发EL1级别的内核调用，再通过HVC 指令进入EL2级别的hypervisor调用，进入到guest代码运行。
+进入guest：
 
-- 同样，guest代码运行的时候访问io资源，guest处于el1的状态，执行的敏感指令被拦截，陷入到EL2级里的kvm执行，在EL2内的kvm只能处理简单的异常，大部分异常需要用户态模拟，因此再返回到EL1的内核态的kvm模块处理，在EL1内核态再返回给用户。
+- 当用户启动虚拟机的时候，要先系统调用进入内核(Host EL1)，内核再**通过HVC 指令进入EL2**级别的执行hypervisor代码，hypervisor进入到guest代码运行。
 
-- 用户态处理完后还要通过系统调用，先进入host内核，继续通过EL2陷入，才能恢复guest代码的执行。
+退出guest：
 
-忽略用户态的处理部分，nVHE模式的hypervisor处理流程。大致逻辑：EL1 -> EL2 -> EL1(主机内核) -> EL2 -> EL1(Guest)。
+- 同样，guest代码运行的时候访问io资源，guest处于el1的状态，执行的敏感指令被拦截，陷入到EL2级里的hypervisor执行，在EL2内的hypervisor只能处理简单的异常，大部分异常需要继续返回。再从EL2返回到EL1的内核态的kvm模块处理，在EL1内核态再返回给用户。
+- 用户态处理完后还要通过系统调用，如一开始运行那样进入guest执行。
 
-
+##### VHE
 
 为了减少这么多步骤的异常级切换，直接让hypervisor和内核工作在一个异常级别即可。ARMv8.1 通过以下机制，使得内核运行在 EL2 ：
 HCR_EL2.E2H = 1（Enable EL2 Host）,    当此位为 1 时，EL2 的行为被“重塑”：
@@ -424,7 +438,7 @@ HCR_EL2.E2H = 1（Enable EL2 Host）,    当此位为 1 时，EL2 的行为被�
 -  SPSR_EL1、ELR_EL1 等寄存器在 EL2 中可用
 - 系统调用（SVC）可以从 EL0 直接陷入 EL2（而非 EL1）
 
-	效果：EL2 可以运行一个完整的操作系统内核（如 Linux），就像它在 EL1 一样！
+	效果：相当于取消host EL1，直接让内核工作在EL2。
 
 HCR_EL2.TGE = 1（Trap General Exceptions）
 
@@ -443,10 +457,11 @@ Stage-1 页表支持
 | **Stage-1 in EL2** | EL2 无虚拟内存支持      | **完整虚拟地址空间**，支持现代 OS 内存管理    |
 
 最终，本质上kvm和内核都工作在EL2，host上只有EL0和EL2，根x86差不多。
+
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="pic/vhe.svg" width="50%">
+    src="pic/nvhe_vs_vhe.png" width="50%">
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -456,21 +471,20 @@ Stage-1 页表支持
 
 
 
+
 ---
 
 ####  ARM KVM上下文切换实现
 
-
-
 #### __kvm_vcpu_run_vhe函数
 
-在寄存器分类中，我们知道分为执行上下文，系统控制，异常状态这几类，所有进入上下文切换之前，需要：
+在寄存器分类中，我们知道分为执行上下文，系统控制，异常状态这几类，所以进入上下文切换之前，需要：
 
 - 保存一些host的CPU运行状态
 - 设置CPU进入虚拟化执行的工作模式
 - 恢复恢复guest的CPU运行状态，有了运行状态，guest在el1的系统就有了运行逻辑的参考依据，一旦切换执行上下文成功，比如栈寄存器和PC寄存器就位，马上就可以开始有条不紊的工作。
 
-arm PC寄存器不能直接填入将指令的地址，需要将地址放入ELR_ELx，当执行 `ret` 的时候，ELR_ELx的值被自动弹入到PC，SPSR_ELx弹入到PSTATE，切换到 `SPSR_ELx` 指定的异常级别开始取指运行。也就是进入到guest的el1的内核态开始执行。
+arm PC寄存器不能直接填入将指令的地址，需要将地址放入ELR_ELx，当执行 `eret` 的时候，ELR_ELx的值被自动弹入到PC，SPSR_ELx弹入到PSTATE，切换到 `SPSR_ELx` 指定的异常级别开始取指运行。也就是进入到guest的el1的内核态开始执行。
 
 ```c
 /* Switch to the guest for VHE systems running in EL2 */
@@ -541,7 +555,7 @@ static inline void __sysreg_restore_el2_return_state(struct kvm_cpu_context *ctx
 
 __guest_enter的实现：
 
-- 保存host上下文到kvm_hyp_ctxt，包括处于el2运行级别的通用寄存器和el0级的host用户栈sp_el0。
+- 保存hyp上下文到kvm_hyp_ctxt，包括处于el2运行级别的通用寄存器和el0级的host用户栈sp_el0。
 
 - 恢复guest上下文，处于el1运行级别的通用寄存器和el0级的guest用户栈sp_el0。
 
@@ -550,16 +564,12 @@ __guest_enter的实现：
 	```c
 	// Restore guest regs x0-x17,
 	// Restore guest regs x18-x29和lr
-	恢复上下文这里，为啥分成两段写，我觉得优点奇怪。
+	恢复上下文这里，为啥分成两段写，我觉得有点奇怪。
 	```
 
 guest代码执行到敏感指令，触发异常，从guest的el1陷入到host的el2，进入el2_sync向量，这是一段垫片代码，最终执行到__guest_exit，将perCPU变量上保存的vcpu地址作为参数。
 
-__guest_exit的实现：
-
-- 从vcpu获取kvm_cpu_context对象（vcpu->kvm_cpu_context）。将guest上下文保存到kvm_cpu_context对象，guest的通用寄存器和sp_el0。
-- 将从percpu获取kvm_hyp_ctxt对象，恢复host上下文，sp_el0和通用寄存器（当然包括lr/x30寄存器）。
-- ret 跳转到__guest_enter的下一条指令。
+虽然guest陷入到el2，也是中断向量处理，但是hypervisor的中断向量不像内核的系统调用和中断那样先将用户态的上下文压栈保存到内核，返回用户态的时候恢复。不管是guest el1还是el0陷入el2，el2也只是使用sp_el2，sp_el1还静静的在哪，当返回到guest用户空间的时候，sp_el0会被覆盖。因此在切换回guest的时候，只需要恢复sp_el0，guest el1和el0的栈寄存器都和切换之前一样。
 
 ```asm
 // arch/arm64/kvm/hyp/hyp-entry.S
@@ -600,11 +610,11 @@ SYM_FUNC_START(__guest_enter)
 	adr_this_cpu x1, kvm_hyp_ctxt, x2 //从cpu上获取 kvm_cpu_context对象的地址
 
 	// Store the hyp regs
-	save_callee_saved_regs x1//将当前(调用者)x18-x30的寄存器保存到上下文。
+	save_callee_saved_regs x1//将当前调用者(已经进入到el2了，当前调用这个函数的就是hyp)x18-x30的寄存器保存到上下文。
 
 	// Save hyp's sp_el0
 	save_sp_el0	x1, x2 //将用户空间栈sp_el0保存到kvm_hyp_ctxt上下文。在进入__guest_enter前，都是执行Hypervisor的C代码，先系统调用，。
-    //将host的上下文记录完。
+    //将hyp的上下文记录完。
 
 	// Now the hyp state is stored if we have a pending RAS SError it must
 	// affect the host or hyp. If any asynchronous exception is pending we
@@ -666,7 +676,16 @@ alternative_else_nop_endif
 它会阻止指令流中在 sb 之前的所有内存访问被推测性地重排序到 sb 之后。
 确保异常返回前后的执行环境不会被推测执行影响，提升安全性。
 */
+```
+#### __guest_exit
 
+__guest_exit的实现：
+
+- 从vcpu获取kvm_cpu_context对象（vcpu->kvm_cpu_context）。将guest上下文保存到kvm_cpu_context对象，guest的通用寄存器和sp_el0。
+- 将从percpu获取kvm_hyp_ctxt对象，恢复host上下文，sp_el0和通用寄存器（当然包括lr/x30寄存器）。
+- ret 跳转到__guest_enter的下一条指令，` exit_code=__guest_enter` 后的指令，此时以及回到hyp的C上下文。
+
+```asm
 
 // arch/arm64/kvm/hyp/entry.S
 SYM_INNER_LABEL(__guest_exit, SYM_L_GLOBAL)
@@ -717,15 +736,12 @@ SYM_INNER_LABEL(__guest_exit, SYM_L_GLOBAL)
 	// Restore hyp's sp_el0
 	restore_sp_el0 x2, x3 //从x2里恢复sp_el0，hyp的C代码执行环境。
 /*
-ARM64的sp_el0与sp_el2
-sp_el0：EL2（Hypervisor）模式下用于存放“EL0/EL1 guest”上下文的备用栈指针。KVM在EL2运行时，sp_el0通常被用作KVM自己的栈（即hyp栈）。
-sp_el2：EL2当前正在执行的栈指针。异常陷入EL2时，CPU自动切换sp到sp_el2。
-2. KVM上下文切换的栈指针管理
-当从guest（EL1）陷入到hyp（EL2）时，CPU自动切换到sp_el2，KVM的异常入口代码（如entry.S）会用sp_el2作为当前栈。
-但KVM的很多管理操作（如保存/恢复上下文、调度等）需要自己的“安全栈”，这就是sp_el0的作用。KVM会在进入EL2后，主动切换到自己的hyp栈（sp_el0），以避免和guest/host栈混淆。
+host 可以el2内核和hyp，el0用户态
+guest 可以el1内核，el0用户态
+不管是guest还是host，只有一个用户异常级别sp_el0可用，因此要保存以及恢复。
 
 vcpu->arch.ctxt.sp 保存 Guest 的 SP_EL0
-kvm_hyp_ctxt.sp（per-CPU）保存 Host 的 SP_EL0，也就是qemu的栈。
+kvm_hyp_ctxt.sp（per-CPU）保存 hyp/Host 的 SP_EL0，也就是qemu的栈。
 */
 	// Now restore the hyp regs
 	restore_callee_saved_regs x2 //从x2对象里恢复寄存器，包括lr。
@@ -746,15 +762,17 @@ alternative_if ARM64_HAS_RAS_EXTN
 
 ```
 
-整体来看，可以把__guest_enter看做一个执行上下文切换并运行guest代码的函数。
+整体上，可以把__guest_enter看做一个执行上下文切换并运行guest代码的函数。
 
-save_sp_el0保存这里我不太理解。当开启hve的时候，内核处于el2，QEMU进程执行: ioctl(vcpu_fd, KVM_RUN, NULL)的时候，sp_el0指向用户栈 ，但是进入到ioctl系统调用，难道不会保存sp_el0到EL2所在的内核栈吗？如何__guest_enter不保存sp_el0，则切换到guest执行的时候，直接覆盖sp_el0。当再次出现异常进入el2处理，此时在el2内又不需要sp_el0，为什么要去恢复呢？如果不恢复，el2处理异常成功，继续__guest_enter载入guest的sp_el0，如果处理失败，系统调用返回，此时sp_el0将被系统调用恢复。这个逻辑有问题吗？
+我们在回到_kvm_arch_vcpu_ioctl_run来看，不管是_`__kvm_vcpu_run`还是`__kvm_vcpu_run_vhe`，都有eret进入guest，从`__guest_exit`返回只有ret返回，也就是任然工作在el2。
+
+nvhe严格的划分：host部分代码运行在el1，hyp部分运行el2。那么什么时候实现 hyp el2会到host el1的呢？答案就在`kvm_call_hyp_ret`宏，它的返回就代表从el2回到了el1，会单独开辟nvhe流程章节分析讲解。
 
 ---
 
 ### 3. Stage-2 地址翻译
 
-host和guest上下文切换属于CPU虚拟化的知识范畴，stage-2地址翻译属于内存虚拟化的范畴，但是这两者紧密相关。所有在这里会简单的做一些介绍。
+host和guest上下文切换属于CPU虚拟化的知识范畴，stage-2地址翻译属于内存虚拟化的范畴，但是这两者紧密相关。所以在这里会简单的做一些介绍。
 
 当CPU切换到guest后，从PC寄存器保存的地址取指运行，就涉及到度内存的访问。
 
@@ -778,7 +796,7 @@ ioctl(vm_fd, KVM_SET_USER_MEMORY_REGION, &reg);
 
 kvm对象创建的时候，就会给S2页表对象创建，**保证VTTBR_EL2不为空。**
 
-此时，我们将ELR_EL2 = 0x0，SCTLR_EL1.M = 0（关闭MMU，不启用S1翻译，所有不用判段地址是高还是低，不适用TTBR0_EL1/TTBR1_EL1），执行eret的时候，PC寄存器开始从0x0的物理虚拟物理地址开始读取。
+此时，我们将ELR_EL2 = 0x0，SCTLR_EL1.M = 0（关闭MMU，不启用S1翻译，所以不用判段地址是高还是低，不适用TTBR0_EL1/TTBR1_EL1），执行eret的时候，PC寄存器开始从0x0的物理虚拟物理地址开始读取。
 
 ```c
 PC = 0x0 (VA)
