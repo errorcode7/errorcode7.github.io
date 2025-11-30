@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-56aa291c.js";
+            window.path_to_searchindex_js = "../searchindex-6b29ef5c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-3c9db5cd.js"></script>
@@ -304,8 +304,10 @@
     padding: 2px;">arm-vhe-kvm</div>
 
 </center>
-- 用户空间代码调用ioctl系统调用，触发内核kvm模块实现的函数调用，在内核的hypervisor发生上下文切换，也就是将host运行的指令保存，载入guest的指令(上下文)到CPU，在`__guest_enter`调用eret，进入guest的EL1级别继续执行PC寄存器的指令。（host el0 -&gt; host el2 -&gt; guest el1 ）
 <ul>
+<li>
+<p>用户空间代码调用ioctl系统调用，触发内核kvm模块实现的函数调用，在内核的hypervisor发生上下文切换，也就是将host运行的指令保存，载入guest的指令(上下文)到CPU，在<code>__guest_enter</code>调用eret，进入guest的EL1级别继续执行PC寄存器的指令。（host el0 -&gt; host el2 -&gt; guest el1 ）</p>
+</li>
 <li>
 <p>当CPU执行到敏感指令的时候，触发异常，退出guest状态，陷入到L2级别hypervisor的中断向量，中断向量很快就跳转到<code> __guest_exit</code>，<code>__guest_exit</code> ret后，CPU回到hypervisor上下文，经过fixup_guest_exit简单的处理，如果成功，则仅需切回guest。</p>
 <p>如果失败，则需要继续回到host，在host内handle_exit处理捕获到的异常，当处理成功，则继续在切换到guest处理，当处理失败，则错误返回给用户空间处理，用户空间处理完成后继续调用ioctl进入内核，发生上下文切换，执行guest代码。</p>
